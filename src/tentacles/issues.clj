@@ -1,11 +1,19 @@
 (ns tentacles.issues
+  "Implements the Github Issues API: http://developer.github.com/v3/issues/"
   (:use [tentacles.core :only [api-call]]
         [clojure.string :only [join]]))
 
+;; Some API requests, namely GET ones, require that labels be passed as a
+;; comma-delimited string of labels. The POST requests want it to be passed
+;; as a list of strings. In order to be consistent, users will always pass
+;; a list of labels. This joins the labels so that the string requirement
+;; on GETs is transparent to the user.
 (defn- join-labels [m]
   (if (:labels m)
     (update-in m [:labels] (partial join ","))
     m))
+
+;; ## Primary Issue API
 
 (defn issues
   "List issues for (authenticated) user.
@@ -70,7 +78,9 @@
      body      -- The body text of the issue."
   (api-call :post "repos/%s/%s/issues/%s" [user repo id] options))
 
-(defn list-comments
+;; ## Issue omments API
+
+(defn comments
   [user repo id]
   "List comments on an issue."
   (api-call :get "repos/%s/%s/issues/%s/comments" [user repo id] nil))
@@ -96,3 +106,20 @@
   "Delete a comment."
   [user repo comment-id options]
   (api-call :delete "repos/%s/%s/issues/comments/%s" [user repo comment-id] options))
+
+;; ## Issue Event API
+
+(defn events
+  "List events for an issue."
+  [user repo id]
+  (api-call :get "repos/%s/%s/issues/%s/events" [user repo id] nil))
+
+(defn repo-events
+  "List events for a repository."
+  [user repo]
+  (api-call :get "repos/%s/%s/issues/events" [user repo] nil))
+
+(defn specific-event
+  "Get a single, specific event."
+  [user repo id]
+  (api-call :get "repos/%s/%s/issues/events/%s" [user repo id] nil))
