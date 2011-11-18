@@ -23,6 +23,6 @@
         :body
         (json/parse-string true))))
 
-(defn api-call [method end-point positional query & keyed-required]
-  (let [query (query-map (partition 2 (concat query keyed-required)))]
+(defn api-call [method end-point positional query]
+  (let [query (query-map query)]
     (make-request method end-point positional query)))
