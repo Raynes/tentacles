@@ -20,7 +20,7 @@
      direction -- asc: ascending,
                   desc (default): descending.
      since     -- String ISO 8601 timestamp."
-  [& [options]]
+  [options]
   (api-call :get "issues" nil (join-labels options)))
 
 (defn repo-issues
@@ -48,17 +48,17 @@
   (api-call :get "repos/%s/%s/issues/%s" [user repo number] nil))
 
 (defn create-issue
-  [user repo title & [options]]
+  [user repo title options]
   "Create an issue.
    Options are:
      milestone -- Milestone number to associate with this issue..
      assignee  -- A username to assign to this issue.
      labels    -- A list of labels to associate with this issue.
      body      -- The body text of the issue."
-  (api-call :post "repos/%s/%s/issues" [user repo] options :title title))
+  (api-call :post "repos/%s/%s/issues" [user repo] (assoc options :title title)))
 
 (defn edit-issue
-  [user repo id & [options]]
+  [user repo id options]
   "Edit an issue.
    Options are:
      milestone -- Milestone number to associate with this issue..
@@ -69,3 +69,30 @@
      title     -- Title of the issue.
      body      -- The body text of the issue."
   (api-call :post "repos/%s/%s/issues/%s" [user repo id] options))
+
+(defn list-comments
+  [user repo id]
+  "List comments on an issue."
+  (api-call :get "repos/%s/%s/issues/%s/comments" [user repo id] nil))
+
+(defn specific-comment
+  [user repo comment-id]
+  "Get a specific comment."
+  (api-call :get "repos/%s/%s/issues/comments/%s" [user repo comment-id] nil))
+
+(defn create-comment
+  "Create a comment."
+  [user repo id body options]
+  (api-call :post "repos/%s/%s/issues/%s/comments"
+            [user repo id] (assoc options :body body)))
+
+(defn edit-comment
+  "Edit a comment."
+  [user repo comment-id body options]
+  (api-call :post "repos/%s/%s/issues/comments/%s"
+            [user repo comment-id] (assoc options :body body)))
+
+(defn delete-comment
+  "Delete a comment."
+  [user repo comment-id options]
+  (api-call :delete "repos/%s/%s/issues/comments/%s" [user repo comment-id] options))
