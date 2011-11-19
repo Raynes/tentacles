@@ -15,7 +15,7 @@
 
 ;; ## Primary Issue API
 
-(defn issues
+(defn user-issues
   "List issues for (authenticated) user.
    Options are:
      filter    -- assigned: assigned to you,
@@ -52,8 +52,8 @@
 
 (defn specific-issue
   "Fetch a specific issue."
-  [user repo number]
-  (api-call :get "repos/%s/%s/issues/%s" [user repo number] nil))
+  [user repo number & [options]]
+  (api-call :get "repos/%s/%s/issues/%s" [user repo number] options))
 
 (defn create-issue
   [user repo title options]
@@ -78,17 +78,17 @@
      body      -- The body text of the issue."
   (api-call :post "repos/%s/%s/issues/%s" [user repo id] options))
 
-;; ## Issue omments API
+;; ## Issue Comments API
 
-(defn comments
-  [user repo id]
+(defn issue-comments
+  [user repo id & [options]]
   "List comments on an issue."
-  (api-call :get "repos/%s/%s/issues/%s/comments" [user repo id] nil))
+  (api-call :get "repos/%s/%s/issues/%s/comments" [user repo id] options))
 
 (defn specific-comment
-  [user repo comment-id]
+  [user repo comment-id & [options]]
   "Get a specific comment."
-  (api-call :get "repos/%s/%s/issues/comments/%s" [user repo comment-id] nil))
+  (api-call :get "repos/%s/%s/issues/comments/%s" [user repo comment-id] options))
 
 (defn create-comment
   "Create a comment."
@@ -109,17 +109,79 @@
 
 ;; ## Issue Event API
 
-(defn events
+(defn issue-events
   "List events for an issue."
-  [user repo id]
-  (api-call :get "repos/%s/%s/issues/%s/events" [user repo id] nil))
+  [user repo id & [options]]
+  (api-call :get "repos/%s/%s/issues/%s/events" [user repo id] options))
 
 (defn repo-events
   "List events for a repository."
-  [user repo]
-  (api-call :get "repos/%s/%s/issues/events" [user repo] nil))
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/issues/events" [user repo] options))
 
 (defn specific-event
   "Get a single, specific event."
-  [user repo id]
-  (api-call :get "repos/%s/%s/issues/events/%s" [user repo id] nil))
+  [user repo id & [options]]
+  (api-call :get "repos/%s/%s/issues/events/%s" [user repo id] options))
+
+;; ## Issue Label API
+
+(defn repo-labels
+  "List labels for a repo."
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/labels" [user repo] options))
+
+(defn issue-labels
+  "List labels on an issue."
+  [user repo issue-id & [options]]
+  (api-call :get "repos/%s/%s/issues/%s/labels" [user repo issue-id] options))
+
+(defn specific-label
+  "Get a specific label."
+  [user repo id & [options]]
+  (api-call :get "repos/%s/%s/labels/%s" [user repo id] options))
+
+(defn create-label
+  "Create a label."
+  [user repo name color options]
+  (api-call :post "repos/%s/%s/labels"
+            [user repo] (assoc options :name name :color color)))
+
+(defn edit-label
+  "Edit a label."
+  [user repo id name color options]
+  (api-call :post "repos/%s/%s/labels/%s"
+            [user repo id] (assoc options :name name :color color)))
+
+(defn delete-label
+  "Delete a label."
+  [user repo id options]
+  (api-call :delete "repos/%s/%s/labels/%s" [user repo id] options))
+
+(defn add-labels
+  "Add labels to an issue."
+  [user repo issue-id labels options]
+  (api-call :post "repos/%s/%s/issues/%s/labels"
+            [user repo issue-id] (assoc options :raw labels)))
+
+(defn remove-label
+  "Remove a label from an issue."
+  [user repo issue-id label-id options]
+  (api-call :delete "repos/%s/%s/issues/%s/labels/%s"
+            [user repo issue-id label-id] options))
+
+(defn replace-labels
+  "Replace all labels for an issue."
+  [user repo issue-id labels options]
+  (api-call :put "repos/%s/%s/issues/%s/labels"
+            [user repo issue-id] (assoc options :raw labels)))
+
+(defn remove-all-labels
+  "Remove all labels from an issue."
+  [user repo issue-id options]
+  (api-call :delete "repos/%s/%s/issues/%s/labels" [user repo issue-id] options))
+
+(defn get-labels-for-milestone
+  "Get labels for every issue in a milestone."
+  [user repo stone-id & [options]]
+  (api-call :get "repos/%s/%s/milestones/%s/labels" [user repo stone-id] options))
