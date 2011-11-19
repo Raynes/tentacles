@@ -185,3 +185,44 @@
   "Get labels for every issue in a milestone."
   [user repo stone-id & [options]]
   (api-call :get "repos/%s/%s/milestones/%s/labels" [user repo stone-id] options))
+
+;; ## Issue Milestones API
+
+(defn repo-milestones
+  "List milestones for a repository.
+   Options are:
+     state     -- open (default), closed.
+     direction -- asc, desc (default).
+     sort      -- due_date (default), completeness."
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/milestones" [user repo] options))
+
+(defn specific-milestone
+  "Get a specific milestone."
+  [user repo id & [options]]
+  (api-call :get "repos/%s/%s/milestones/%s" [user repo id] options))
+
+(defn create-milestone
+  "Create a milestone.
+   Options are:
+     state       -- open (default), closed.
+     description -- a description string.
+     due-on      -- String ISO 8601 timestamp"
+  [user repo title options]
+  (api-call :post "repos/%s/%s/milestones"
+            [user repo] (assoc options :title title)))
+
+(defn edit-milestone
+  "Edit a milestone.
+   Options are:
+     state       -- open (default), closed.
+     description -- a description string.
+     due-on      -- String ISO 8601 timestamp"
+  [user repo id title options]
+  (api-call :post "repos/%s/%s/milestones/%s"
+            [user repo id] (assoc options :title title)))
+
+(defn delete-milestone
+  "Delete a milestone."
+  [user repo id options]
+  (api-call :delete "repos/%s/%s/milestones/%s" [user repo id] options))
