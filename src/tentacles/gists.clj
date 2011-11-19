@@ -1,5 +1,6 @@
 (ns tentacles.gists
-  (:use [tentacles.core :only [api-call]]))
+  (:use [tentacles.core :only [api-call]]
+        [slingshot.slingshot :only [try+]]))
 
 ;; ## Primary gist API
 
@@ -81,12 +82,9 @@
 (defn starred?
   "Check if a gist is starred."
   [id & [options]]
-  (try
-    (nil? (api-call :get "gists/%s/star" [id] options))
-    (catch Exception e
-      (if (= 404 (get-in (.getContext e) [:environment 'resp :status]))
-        false
-        (throw e)))))
+  (try+
+   (nil? (api-call :get "gists/%s/star" [id] options))
+   (catch [:status 404] _ false)))
 
 (defn fork-gist
   "Fork a gist."
@@ -97,3 +95,6 @@
   "Delete a gist."
   [id & [options]]
   (nil? (api-call :delete "gists/%s" [id] options)))
+
+;; ## Gist Comments API
+
