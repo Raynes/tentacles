@@ -98,3 +98,27 @@
 
 ;; ## Gist Comments API
 
+(defn comments
+  "List comments for a gist."
+  [id & [options]]
+  (api-call :get "gists/%s/comments" [id] options))
+
+(defn specific-comment
+  "Get a specific comment."
+  [comment-id & [options]]
+  (api-call :get "gists/comments/%s" [comment-id] options))
+
+(defn create-comment
+  "Create a comment."
+  [id body options]
+  (api-call :post "gists/%s/comments" [id] (assoc options :body body)))
+
+(defn edit-comment
+  "Edit a comment."
+  [comment-id body options]
+  (api-call :post "gists/comments/%s" [comment-id] (assoc options :body body)))
+
+(defn delete-comment
+  "Delete a comment."
+  [comment-id options]
+  (nil? (api-call :delete "gists/comments/%s" [comment-id] options)))
