@@ -1,4 +1,5 @@
 (ns tentacles.gists
+  "Implements the Github Gists API: http://developer.github.com/v3/gists/"
   (:use [tentacles.core :only [api-call]]
         [slingshot.slingshot :only [try+]]))
 
