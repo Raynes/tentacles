@@ -221,8 +221,8 @@
                          :size (.length path)))
         :filepath path)))
 
-  (defn create-download
-    "Creates a new download."
+  (defn upload-file
+    "Upload a file given a download resource obtained from download-resource."
     [resp]
     (post (:s3_url resp)
           {:debug true
@@ -235,3 +235,18 @@
                          ["Signature" (:signature resp)]
                          ["Content-Type" (:mime_type resp)]
                          ["file" (slurp (:filepath resp))]]})))
+
+;; Repo Forks API
+
+(defn forks
+  "Get a list of a repository's forks."
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/forks" [user repo] options))
+
+(defn create-fork
+  "Create a new fork.
+   Options are:
+      org -- If present, the repo is forked to this organization."
+  [user repo options]
+  (api-call :post "repos/%s/%s/forks" [user repo] options))
+
