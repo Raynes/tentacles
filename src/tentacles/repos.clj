@@ -250,3 +250,33 @@
   [user repo options]
   (api-call :post "repos/%s/%s/forks" [user repo] options))
 
+;; Repo Deploy Keys API
+
+(defn keys
+  "List deploy keys for a repo."
+  [user repo options]
+  (api-call :get "repos/%s/%s/keys" [user repo] options))
+
+(defn specific-key
+  "Get a specific deploy key."
+  [user repo id options]
+  (api-call :get "repos/%s/%s/keys/%s" [user repo id] options))
+
+(defn create-key
+  "Create a new deploy key."
+  [user repo title key options]
+  (api-call :post "repos/%s/%s/keys" [user repo]
+            (assoc options :title title :key key)))
+
+(defn edit-key
+  "Edit a deploy key.
+   Options are:
+      title -- New title.
+      key   -- New key."
+  [user repo id options]
+  (api-call :post "repos/%s/%s/keys/%s" [user repo id] options))
+
+(defn delete-key
+  "Delete a deploy key."
+  [user repo id options]
+  (api-call :delete "repos/%s/%s/keys/%s" [user repo id] options))
