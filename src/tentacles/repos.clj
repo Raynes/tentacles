@@ -125,3 +125,67 @@
   "Remove a collaborator from a repository."
   [user repo collaborator options]
   (nil? (api-call :delete "repos/%s/%s/collaborators/%s" [user repo collaborator] options)))
+
+;; ## Repo Commits API
+
+(defn commits
+  "List commits for a repository.
+   Options are:
+      sha  -- Sha or branch to start lising commits from.
+      path -- Only commits at this path will be returned."
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/commits" [user repo] options))
+
+(defn specific-commit
+  "Get a specific commit."
+  [user repo sha & [options]]
+  (api-call :get "repos/%s/%s/commits/%s" [user repo sha] options))
+
+(defn commit-comments
+  "List the commit comments for a repository."
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/comments" [user repo] options))
+
+(defn specific-commit-comments
+  "Get the comments on a specific commit."
+  [user repo sha & [options]]
+  (api-call :get "repos/%s/%s/commits/%s/comments" [user repo sha] options))
+
+;; 'line' is supposed to be a required argument for this API call, but
+;; I'm convinced that it doesn't do anything. The only thing that seems
+;; to matter is the 'position' argument. As a matter of fact, we can omit
+;; 'line' entirely and Github does not complain, despite it supposedly being
+;; a required argument.
+;;
+;; Furthermore, it requires that the sha be passed in the URL *and* the JSON
+;; input. I don't see how they can ever possibly be different, so we're going
+;; to just require one sha.
+(defn create-commit-comment
+  "Create a commit comment. path is the location of the file you're commenting on.
+   position is the index of the line you're commenting on. Not the actual line number,
+   but the nth line shown in the diff."
+  [user repo sha path position body options]
+  (api-call :post "repos/%s/%s/commits/%s/comments" [user repo sha]
+            (assoc options
+              :body body
+              :commit-id sha
+              :path path
+              :position position)))
+
+(defn specific-commit-comment
+  "Get a specific commit comment."
+  [user repo id & [options]]
+  (api-call :get "repos/%s/%s/comments/%s" [user repo id] options))
+
+(defn update-commit-comment
+  "Update a commit comment."
+  [user repo id body options]
+  (api-call :post "repos/%s/%s/comments/%s" [user repo id] (assoc options :body body)))
+
+(defn compare-commits
+  [user repo base head & [options]]
+  (api-call :get "repos/%s/%s/compare/%s...%s" [user repo base head] options))
+
+(defn delete-commit-comment
+  [user repo id options]
+  (nil? (api-call :delete "repos/%s/%s/comments/%s" [user repo id] options)))
