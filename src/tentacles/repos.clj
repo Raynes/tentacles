@@ -280,3 +280,32 @@
   "Delete a deploy key."
   [user repo id options]
   (api-call :delete "repos/%s/%s/keys/%s" [user repo id] options))
+
+;; Repo Watcher API
+
+(defn watchers
+  "List a repository's watchers."
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/watchers" [user repo] options))
+
+(defn watching
+  "List all the repositories that a user is watching."
+  [user & [options]]
+  (api-call :get "users/%s/watched" [user] options))
+
+(defn watching?
+  "Check if you are watching a repository."
+  [user repo options]
+  (try+
+   (nil? (api-call :get "user/watched/%s/%s" [user repo] options))
+   (catch [:status 404] _ false)))
+
+(defn watch
+  "Watch a repository."
+  [user repo options]
+  (nil? (api-call :put "user/watched/%s/%s" [user repo] options)))
+
+(defn unwatch
+  "Unwatch a repository."
+  [user repo options]
+  (nil? (api-call :delete "user/watched/%s/%s" [user repo] options)))
