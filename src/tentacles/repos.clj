@@ -1,6 +1,7 @@
 (ns tentacles.repos
   "Implements the Github Repos API: http://developer.github.com/v3/repos/"
-  (:use [tentacles.core :only [api-call]]))
+  (:use [tentacles.core :only [api-call]]
+        [slingshot.slingshot :only [try+]]))
 
 ;; ## Primary Repos API
 
@@ -100,3 +101,27 @@
   "List a repository's branches."
   [user repo & [options]]
   (api-call :get "repos/%s/%s/branches" [user repo] options))
+
+;; ## Repo Collaborators API
+
+(defn collaborators
+  "List a repository's collaborators."
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/collaborators" [user repo] options))
+
+(defn collaborator?
+  "Check if a user is a collaborator."
+  [user repo collaborator & [options]]
+  (try+
+   (nil? (api-call :get "repos/%s/%s/collaborators/%s" [user repo collaborator] options))
+   (catch [:status 404] _ false)))
+
+(defn add-collaborator
+  "Add a collaborator to a repository."
+  [user repo collaborator options]
+  (nil? (api-call :put "repos/%s/%s/collaborators/%s" [user repo collaborator] options)))
+
+(defn remove-collaborator
+  "Remove a collaborator from a repository."
+  [user repo collaborator options]
+  (nil? (api-call :delete "repos/%s/%s/collaborators/%s" [user repo collaborator] options)))
