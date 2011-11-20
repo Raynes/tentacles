@@ -1,6 +1,8 @@
 (ns tentacles.repos
   "Implements the Github Repos API: http://developer.github.com/v3/repos/"
-  (:use [tentacles.core :only [api-call]]
+  (:use [clj-http.client :only [post]]
+        [clojure.java.io :only [file]]
+        [tentacles.core :only [api-call]]
         [slingshot.slingshot :only [try+]]))
 
 ;; ## Primary Repos API
@@ -189,3 +191,47 @@
 (defn delete-commit-comment
   [user repo id options]
   (nil? (api-call :delete "repos/%s/%s/comments/%s" [user repo id] options)))
+
+;; ## Repo Downloads API
+
+(defn downloads
+  "List the downloads for a repository."
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/downloads" [user repo] options))
+
+(defn specific-download
+  "Get a specific download."
+  [user repo id & [options]]
+  (api-call :get "repos/%s/%s/downloads/%s" [user repo id] options))
+
+(defn delete-download
+  "Delete a download"
+  [user repo id options]
+  (nil? (api-call :delete "repos/%s/%s/downloads/%s" [user repo id] options)))
+
+;; Commenting this stuff out. It doesn't actually work yet because
+;; we need multipart/form-data.
+(comment
+  (defn download-resource [user repo path options]
+    (let [path (file path)]
+      (assoc (api-call :post "repos/%s/%s/downloads"
+                       [user repo]
+                       (assoc options
+                         :name (.getName path)
+                         :size (.length path)))
+        :filepath path)))
+
+  (defn create-download
+    "Creates a new download."
+    [resp]
+    (post (:s3_url resp)
+          {:debug true
+           :form-params [["key" (:path resp)]
+                         ["acl" (:acl resp)]
+                         ["success_action_status" "201"]
+                         ["Filename" (:name resp)]
+                         ["AWSAccessKeyId" (:accesskeyid resp)]
+                         ["Policy" (:policy resp)]
+                         ["Signature" (:signature resp)]
+                         ["Content-Type" (:mime_type resp)]
+                         ["file" (slurp (:filepath resp))]]})))
