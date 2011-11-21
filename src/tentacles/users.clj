@@ -49,3 +49,42 @@
    a string or a sequence of email addresses."
   [emails options]
   (nil? (api-call :delete "user/emails" nil (assoc options :raw emails))))
+
+;; User Followers API
+
+(defn followers
+  "List a user's followers."
+  [user]
+  (api-call :get "users/%s/followers" [user] nil))
+
+(defn my-followers
+  "List the authenticated user's followers."
+  [options]
+  (api-call :get "user/followers" nil options))
+
+(defn following
+  "List the users a user is following."
+  [user]
+  (api-call :get "users/%s/following" [user] nil))
+
+(defn my-following
+  "List the users the authenticated user is following."
+  [options]
+  (api-call :get "user/following" nil options))
+
+(defn following?
+  "Check if the authenticated user is following another user."
+  [user options]
+  (try+
+   (nil? (api-call :get "user/following/%s" [user] options))
+   (catch [:status 404] _ false)))
+
+(defn follow
+  "Follow a user."
+  [user options]
+  (nil? (api-call :put "user/following/%s" [user] options)))
+
+(defn unfollow
+  "Unfollow a user."
+  [user options]
+  (nil? (api-call :delete "user/following/%s" [user] options)))

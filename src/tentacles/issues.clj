@@ -15,7 +15,7 @@
 
 ;; ## Primary Issue API
 
-(defn user-issues
+(defn my-issues
   "List issues for (authenticated) user.
    Options are:
      filter    -- assigned: assigned to you,
@@ -31,7 +31,7 @@
   [options]
   (api-call :get "issues" nil (join-labels options)))
 
-(defn repo-issues
+(defn issues
   "List issues for a repository.
    Options are:
      milestone -- Milestone number,
