@@ -88,3 +88,33 @@
   "Unfollow a user."
   [user options]
   (nil? (api-call :delete "user/following/%s" [user] options)))
+
+;; User Keys API
+
+(defn keys
+  "List the authenticated user's public keys."
+  [options]
+  (api-call :get "user/keys" nil options))
+
+(defn specific-key
+  "Get a specific key from the authenticated user."
+  [id options]
+  (api-call :get "user/keys/%s" [id] options))
+
+(defn create-key
+  "Create a new public key."
+  [title key options]
+  (api-call :post "user/keys" nil (assoc options :title title :key key)))
+
+(defn edit-key
+  "Edit an existing public key.
+   Options are:
+      title -- New title.
+      key   -- New key."
+  [id options]
+  (api-call :post "user/keys/%s" [id] options))
+
+(defn delete-key
+  "Delete a public key."
+  [id options]
+  (nil? (api-call :delete "user/keys/%s" [id] options)))
