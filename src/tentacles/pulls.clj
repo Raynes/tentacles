@@ -67,3 +67,37 @@
   [user repo id options]
   (api-call :put "repos/%s/%s/pulls/%s/merge" [user repo id] options))
 
+;; ## Pull Request Comment API
+
+(defn comments
+  "List comments on a pull request."
+  [user repo id & [options]]
+  (api-call :get "repos/%s/%s/pulls/%s/comments" [user repo id] options))
+
+(defn specific-comment
+  "Get a specific comment on a pull request."
+  [user repo id & [options]]
+  (api-call :get "repos/%s/%s/pulls/comments/%s" [user repo id] options))
+
+;; You're supposed to be able to reply to comments as well, but that doesn't seem
+;; to actually work. Commenting tha
+(defn create-comment
+  "Create a comment on a pull request."
+  [user repo id sha path position body options]
+  (api-call :post "repos/%s/%s/pulls/%s/comments" [user repo id]
+            (assoc options
+              :commit-id sha
+              :path path
+              :position position
+              :body body)))
+
+(defn edit-comment
+  "Edit a comment on a pull request."
+  [user repo id body options]
+  (api-call :post "repos/%s/%s/pulls/comments/%s" [user repo id]
+            (assoc options :body body)))
+
+(defn delete-comment
+  "Delete a comment on a pull request."
+  [user repo id options]
+  (nil? (api-call :delete "repos/%s/%s/pulls/comments/%s" [user repo id] options)))
