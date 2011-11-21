@@ -30,3 +30,22 @@
       bio      -- User's biography."
   [options]
   (api-call :post "user" nil options))
+
+;; User Email API
+
+(defn emails
+  "List the authenticated user's emails."
+  [options]
+  (api-call :get "user/emails" nil options))
+
+(defn add-emails
+  "Add email address(es) to the authenticated user. emails is either
+   a string or a sequence of emails addresses."
+  [emails options]
+  (api-call :post "user/emails" nil (assoc options :raw emails)))
+
+(defn delete-emails
+  "Delete email address(es) from the authenticated user. Emails is either
+   a string or a sequence of email addresses."
+  [emails options]
+  (nil? (api-call :delete "user/emails" nil (assoc options :raw emails))))
