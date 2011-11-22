@@ -209,32 +209,29 @@
   [user repo id options]
   (nil? (api-call :delete "repos/%s/%s/downloads/%s" [user repo id] options)))
 
-;; Commenting this stuff out. It doesn't actually work yet because
-;; we need multipart/form-data.
-(comment
-  (defn download-resource [user repo path options]
-    (let [path (file path)]
-      (assoc (api-call :post "repos/%s/%s/downloads"
-                       [user repo]
-                       (assoc options
-                         :name (.getName path)
-                         :size (.length path)))
-        :filepath path)))
+(defn download-resource [user repo path options]
+  (let [path (file path)]
+    (assoc (api-call :post "repos/%s/%s/downloads"
+                     [user repo]
+                     (assoc options
+                       :name (.getName path)
+                       :size (.length path)))
+      :filepath path)))
 
-  (defn upload-file
-    "Upload a file given a download resource obtained from download-resource."
-    [resp]
-    (post (:s3_url resp)
-          {:debug true
-           :form-params [["key" (:path resp)]
-                         ["acl" (:acl resp)]
-                         ["success_action_status" "201"]
-                         ["Filename" (:name resp)]
-                         ["AWSAccessKeyId" (:accesskeyid resp)]
-                         ["Policy" (:policy resp)]
-                         ["Signature" (:signature resp)]
-                         ["Content-Type" (:mime_type resp)]
-                         ["file" (slurp (:filepath resp))]]})))
+(defn upload-file
+  "Upload a file given a download resource obtained from download-resource."
+  [resp]
+  (post (:s3_url resp)
+        {:debug true
+         :multipart [["key" (:path resp)]
+                     ["acl" (:acl resp)]
+                     ["success_action_status" "201"]
+                     ["Filename" (:name resp)]
+                     ["AWSAccessKeyId" (:accesskeyid resp)]
+                     ["Policy" (:policy resp)]
+                     ["Signature" (:signature resp)]
+                     ["Content-Type" (:mime_type resp)]
+                     ["file" (file (:filepath resp))]]}))
 
 ;; Repo Forks API
 
