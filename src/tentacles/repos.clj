@@ -310,3 +310,50 @@
   "Unwatch a repository."
   [user repo options]
   (nil? (api-call :delete "user/watched/%s/%s" [user repo] options)))
+
+;; ## Repo Hooks API
+
+(defn hooks
+  "List the hooks on a repository."
+  [user repo options]
+  (api-call :get "repos/%s/%s/hooks" [user repo] options))
+
+(defn specific-hook
+  "Get a specific hook."
+  [user repo id options]
+  (api-call :get "repos/%s/%s/hooks/%s" [user repo id] options))
+
+(defn create-hook
+  "Create a hook.
+   Options are:
+      events -- A sequence of event strings. Only 'push' by default.
+      active -- true or false; determines if the hook is actually triggered
+                on pushes."
+  [user repo name config options]
+  (api-call :post "repos/%s/%s/hooks" [user repo name config]
+            (assoc options
+              :name name, :config config)))
+
+(defn edit-hook
+  "Edit an existing hook.
+   Options are:
+      name          -- Name of the hook.
+      config        -- Modified config.
+      events        -- A sequence of event strings. Replaces the events.
+      add_events    -- A sequence of event strings to be added.
+      remove_events -- A sequence of event strings to remove.
+      active        -- true or false; determines if the hook is actually
+                       triggered on pushes."
+  [user repo id options]
+  (api-call :post "repos/%s/%s/hooks/%s" [user repo id] options))
+
+(defn test-hook
+  "Test a hook."
+  [user repo id options]
+  (nil? (api-call :post "repos/%s/%s/hooks/%s/test" [user repo id] options)))
+
+(defn delete-hook
+  "Delete a hook."
+  [user repo id options]
+  (nil? (api-call :delete "repos/%s/%s/hooks/%s" [user repo id] options)))
+
