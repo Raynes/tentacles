@@ -209,7 +209,12 @@
   [user repo id options]
   (nil? (api-call :delete "repos/%s/%s/downloads/%s" [user repo id] options)))
 
-(defn download-resource [user repo path options]
+;; Github uploads are a two step process. First we get a download resource and then
+;; we use that to upload the file.
+(defn download-resource
+  "Get a download resource for a file you want to upload. This will be
+   passed to upload-file to actually upload your file."
+  [user repo path options]
   (let [path (file path)]
     (assoc (api-call :post "repos/%s/%s/downloads"
                      [user repo]
@@ -222,8 +227,7 @@
   "Upload a file given a download resource obtained from download-resource."
   [resp]
   (post (:s3_url resp)
-        {:debug true
-         :multipart [["key" (:path resp)]
+        {:multipart [["key" (:path resp)]
                      ["acl" (:acl resp)]
                      ["success_action_status" "201"]
                      ["Filename" (:name resp)]
@@ -231,7 +235,7 @@
                      ["Policy" (:policy resp)]
                      ["Signature" (:signature resp)]
                      ["Content-Type" (:mime_type resp)]
-                     ["file" (file (:filepath resp))]]}))
+                     ["file" (:filepath resp)]]}))
 
 ;; Repo Forks API
 
