@@ -1,4 +1,10 @@
 * APIs
+
+These are just the API TODO list that was relevant when I started using org for todo
+lists. It is not an all-inclusive list. The ones labeled TODO are the only ones that
+still need to be done. Everything else, including what is labeled here as DONE, is
+done.
+
 ** DONE Repo hooks
 ** TODO Git Data
 ** TODO Orgs
