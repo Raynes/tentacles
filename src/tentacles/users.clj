@@ -19,7 +19,7 @@
   [options]
   (api-call :get "user" nil options))
 
-(defn edit
+(defn edit-user
   "Edit the currently authenticated user.
    Options are:
       name     -- User's name.
