@@ -2,6 +2,8 @@
   "Implements the Github Orgs API: http://developer.github.com/v3/orgs/"
   (:use [tentacles.core :only [api-call]]))
 
+;; ## Primary API
+
 (defn user-orgs
   "List the public organizations for a user."
   [user]
