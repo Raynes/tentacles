@@ -9,3 +9,15 @@ done.
 ** TODO Git Data
 ** TODO Orgs
 ** TODO Pubsubhubbub
+
+* Design
+
+** TODO Handle Exceptions
+
+The Github API tends to give '404' for general 'this does not exist' errors as well as
+"that's completely wrong". We don't discern between these things in tentacles. As a matter
+of fact, we just let clj-http throw exceptions for those things. The only time we handle
+them specially is in API calls that translate to true/false in Clojure. In those cases
+we catch the 404 exception and return false.
+
+We need to figure out what the best way to handle these exceptional situations consistently.
