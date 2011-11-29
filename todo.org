@@ -7,7 +7,7 @@ done.
 
 ** DONE Repo hooks
 ** TODO Git Data
-** TODO Orgs
+** DONE Orgs
 ** TODO Pubsubhubbub
 
 * Design
