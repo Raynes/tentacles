@@ -77,3 +77,86 @@
   "Conceal a user's membership."
   [org user options]
   (nil? (api-call :delete "orgs/%s/public_members/%s" [org user] options)))
+
+;; ## Org Teams API
+
+(defn teams
+  "List the teams for an organization."
+  [org options]
+  (api-call :get "orgs/%s/teams" [org] options))
+
+(defn specific-team
+  "Get a specific team."
+  [id options]
+  (api-call :get "teams/%s" [id] options))
+
+(defn create-team
+  "Create a team.
+   Options are:
+      repo-names -- Repos that belong to this team.
+      permission -- pull (default): team can pull but not push or admin.
+                    push: team can push and pull but not admin.
+                    admin: team can push, pull, and admin."
+  [org name options]
+  (api-call :post "orgs/%s/teams" [org]
+            (assoc options
+              :name name)))
+
+(defn edit-team
+  "Edit a team.
+   Options are:
+      name        -- New team name.
+      permissions -- pull (default): team can pull but not push or admin.
+                     push: team can push and pull but not admin.
+                     admin: team can push, pull, and admin."
+  [id options]
+  (api-call :post "teams/%s" [id] options))
+
+(defn delete-team
+  "Delete a team."
+  [id options]
+  (nil? (api-call :delete "teams/%s" [id] options)))
+
+(defn team-members
+  "List members of a team."
+  [id options]
+  (api-call :get "teams/%s/members" [id] options))
+
+(defn team-member?
+  "Get a specific team member."
+  [id user options]
+  (try+
+   (nil? (api-call :get "teams/%s/members/%s" [id user] options))
+   (catch [:status 404] _ false)))
+
+(defn add-team-member
+  "Add a team member."
+  [id user options]
+  (nil? (api-call :put "teams/%s/members/%s" [id user] options)))
+
+(defn delete-team-member
+  "Remove a team member."
+  [id user options]
+  (nil? (api-call :delete "teams/%s/members/%s" [id user] options)))
+
+(defn list-team-repos
+  "List the team repositories."
+  [id options]
+  (api-call :get "teams/%s/repos" [id] options))
+
+(defn team-repo?
+  "Check if a repo is managed by this team."
+  [id user repo options]
+  (try+
+   (nil? (api-call :get "teams/%s/repos/%s/%s" [id user repo] options))
+   (catch [:status 404] _ false)))
+
+(defn add-team-repo
+  "Add a team repo."
+  [id user repo options]
+  (nil? (api-call :put "teams/%s/repos/%s/%s" [id user repo] options)))
+
+(defn delete-team-repo
+  "Remove a repo from a team."
+  [id user repo options]
+  (nil? (api-call :delete "teams/%s/repos/%s/%s" [id user repo] options)))
