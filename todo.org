@@ -20,8 +20,9 @@ them specially is in API calls that translate to true/false in Clojure. In those
 we catch the 404 exception and return false.
 
 We need to figure out what the best way to handle these exceptional situations consistently.
-
 * General
 ** TODO OAuth support
 
 This is just waiting on somebody who cares enough to do it because I do not.
+
+** TODO Tests
