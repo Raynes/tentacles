@@ -2,6 +2,8 @@
 
 Tentacles is a Clojure library for working with the Github v3 API. It supports the entire Github API.
 
+This library is the successor to my old [clj-github](https://github.com/Raynes/clj-github) library. It will no longer be maintained.
+
 ## Usage
 
 This is on clojars, of course. Just add `[tentacles "0.1.0"]` to your `:dependencies` in your project.clj file.
@@ -35,7 +37,7 @@ user> (repos/repos {:auth "Raynes:REDACTED" :per-page 1})
 
 If an API function has no options and authentication would have no uses for that particular call, the options map is not a parameter at all. For API calls that can do different things based on whether or not you are authenticated but authentication is not **required**, then the options map will be an optional argument. For API calls that require authentication to function at all, the options map is a required argument. Any data that is required by an API call is a positional argument to the API functions. The options map only ever contains authentication info and/or optional input.
 
-The Github API is massive and great. I can't demonstrate every API call. Everything is generally just as easy as the above examples, and I'm working hard to document things as well as possible, so go explore!
+The Github API is massive and great. I can't demonstrate every API call. Everything is generally just as easy as the above examples, and I'm working hard to document things as well as possible, so go explore! There are even some [Marginalia docs](http://raynes.github.com/tentacles)!
 
 If you run into something that isn't documented well or you don't understand, look for the API call on the Github API [docs](http://developer.github.com/v3/). If you feel like it, please submit a pull request with improved documentation. Let's make this the most impressive Github API library around!
 
