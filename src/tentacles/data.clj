@@ -46,3 +46,32 @@
               :tree tree
               :parents parents)))
 
+;; ## References
+
+(defn reference
+  "Get a reference."
+  [user repo ref & [options]]
+  (api-call :get "repos/%s/%s/git/refs/%s" [user repo ref] options))
+
+(defn references
+  "Get all references."
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/git/refs" [user repo] options))
+
+(defn create-reference
+  "Create a new reference."
+  [user repo ref sha options]
+  (api-call :post "repos/%s/%s/git/refs" [user repo]
+            (assoc options
+              :ref ref
+              :sha sha)))
+
+(defn edit-reference
+  "Edit a reference.
+   Options are:
+      force -- true or false (default); whether to force the update or make
+               sure this is a fast-forward update."
+  [user repo ref sha options]
+  (api-call :post "repos/%s/%s/git/refs/%s" [user repo ref]
+            (assoc options :sha sha)))
+
