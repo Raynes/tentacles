@@ -27,15 +27,17 @@
 (defn create-commit
   "Create a commit.
    Options are:
-      parents         -- A sequence of SHAs of the commits that were
-                         the parents of this commit. If omitted, the
-                         commit will be written as a root commit.
-      author.name     -- Name of the author of the commit.
-      author.email    -- Email of the author of the commit.
-      author.date     -- Timestamp when this commit was authored.
-      committer.name  -- The name of the committer of this commit.
-      committer.email -- The email of the committer of this commit.
-      committer.date  -- Timestamp when this commit was committed.
+      parents   -- A sequence of SHAs of the commits that were
+                   the parents of this commit. If omitted, the
+                   commit will be written as a root commit.
+      author    -- A map of the following (string keys):
+                   \"name\"  -- Name of the author of the commit.
+                   \"email\" -- Email of the author of the commit.
+                   \"date\"  -- Timestamp when this commit was authored.
+      committer -- A map of the following (string keys):
+                   \"name\"  -- Name of the committer of the commit.
+                   \"email\" -- Email of the committer of the commit.
+                   \"date\"  -- Timestamp when this commit was committed.
    If the committer section is omitted, then it will be filled in with author
    data. If that is omitted, information will be obtained using the
    authenticated user's information and the current date."
@@ -93,9 +95,10 @@
    you simply need to create the reference and this call would be
    unnecessary.
    Options are:
-      tagger.name -- Name of the author of this tag.
-      tagger.email -- Email of the author of this tag.
-      tagger.date  -- Timestamp when this object was tagged."
+      tagger -- A map (string keys) containing the following:
+                \"name\"  -- Name of the author of this tag.
+                \"email\" -- Email of the author of this tag.
+                \"date\"  -- Timestamp when this object was tagged."
   [user repo tag message object type options]
   (api-call :post "repos/%s/%s/git/tags" [user repo]
             (assoc options
@@ -103,3 +106,28 @@
               :message message
               :object object
               :type type)))
+
+;; ## Trees
+
+(defn tree
+  "Get a tree.
+   Options are:
+      recursive -- true or false; get a tree recursively?"
+  [user repo sha & [options]]
+  (api-call :get "repos/%s/%s/git/trees/%s" [user repo sha] options))
+
+(defn create-tree
+  "Create a tree. 'tree' is a map of the following (string keys):
+   path    -- The file referenced in the tree.
+   mode    -- The file mode; one of 100644 for file, 100755 for executable,
+              040000 for subdirectory, 160000 for submodule, or 120000 for
+              a blob that specifies the path of a symlink.
+   type    -- blog, tree, or commit.
+   sha     -- SHA of the object in the tree.
+   content -- Content that you want this file to have.
+   Options are:
+      base-tree -- SHA of the tree you want to update (if applicable)."
+  [user repo tree options]
+  (api-call :post "repos/%s/%s/git/trees" [user repo]
+            (assoc options :tree tree)))
+
