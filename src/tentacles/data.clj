@@ -75,3 +75,31 @@
   (api-call :post "repos/%s/%s/git/refs/%s" [user repo ref]
             (assoc options :sha sha)))
 
+
+;; ## Tags
+
+(defn tag
+  "Get a tag."
+  [user repo sha & [options]]
+  (api-call :get "repos/%s/%s/git/tags/%s" [user repo sha] options))
+
+;; The API documentation is unclear about which parts of this API call
+;; are optional.
+(defn create-tag
+  "Create a tag object. Note that this does not create the reference
+   that makes a tag in Git. If you want to create an annotated tag, you
+   have to do this call to create the tag object and then create the
+   `refs/tags/[tag]` reference. If you want to create a lightweight tag,
+   you simply need to create the reference and this call would be
+   unnecessary.
+   Options are:
+      tagger.name -- Name of the author of this tag.
+      tagger.email -- Email of the author of this tag.
+      tagger.date  -- Timestamp when this object was tagged."
+  [user repo tag message object type options]
+  (api-call :post "repos/%s/%s/git/tags" [user repo]
+            (assoc options
+              :tag tag
+              :message message
+              :object object
+              :type type)))
