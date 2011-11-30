@@ -1,9 +1,11 @@
 (ns tentacles.repos
   "Implements the Github Repos API: http://developer.github.com/v3/repos/"
-  (:use [clj-http.client :only [post]]
+  (:refer-clojure :exclude [keys])
+  (:use [clj-http.client :only [post put]]
         [clojure.java.io :only [file]]
-        [tentacles.core :only [api-call]]
-        [slingshot.slingshot :only [try+]]))
+        [tentacles.core :only [api-call query-map]]
+        [slingshot.slingshot :only [try+]]
+        [cheshire.core :only [generate-string]]))
 
 ;; ## Primary Repos API
 
@@ -357,3 +359,22 @@
   [user repo id options]
   (nil? (api-call :delete "repos/%s/%s/hooks/%s" [user repo id] options)))
 
+;; ## PubSubHubbub
+
+(defn pubsubhubub
+  "Create or modify a pubsubhubub subscription.
+   Options are:
+      secret -- A shared secret key that generates an SHA HMAC of the
+                payload content."
+  [user repo mode event callback & [options]]
+  (nil?
+   (post "https://api.github.com/hub"
+         {:basic-auth (:auth options)
+          :form-params
+          (merge
+           {"hub.mode" mode
+            "hub.topic" (format "https://github.com/%s/%s/events/%s"
+                                user repo event)
+            "hub.callback" callback}
+           (when-let [secret (:secret options)]
+             {"hub.secret" secret}))})))
