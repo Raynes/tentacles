@@ -3122,8 +3122,8 @@ $(document).ready(function() {
     ul.css('margin-top', '0px')
 
 })
-</script><title>tentacles -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">tentacles</h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>A library for working with the Github API.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">clj-http</td><td class="dotted"><hr /></td><td class="dep-version">0.2.5</td></tr><tr><td class="dep-name">cheshire</td><td class="dotted"><hr /></td><td class="dep-version">2.0.2</td></tr><tr><td class="dep-name">slingshot</td><td class="dotted"><hr /></td><td class="dep-version">0.9.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#tentacles.core">tentacles.core</a></li><li><a href="#tentacles.events">tentacles.events</a></li><li><a href="#tentacles.gists">tentacles.gists</a></li><li><a href="#tentacles.issues">tentacles.issues</a></li><li><a href="#tentacles.orgs">tentacles.orgs</a></li><li><a href="#tentacles.pulls">tentacles.pulls</a></li><li><a href="#tentacles.repos">tentacles.repos</a></li><li><a href="#tentacles.users">tentacles.users</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.core" name="tentacles.core"><h1 class="project-name">tentacles.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>The v3 version of the Github API is very simple and consistent. We're going to take
+</script><title>tentacles -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">tentacles</h1><h2 class="project-version">0.1.0</h2><br /><p>A library for working with the Github API.</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">clj-http</td><td class="dotted"><hr /></td><td class="dep-version">0.2.5</td></tr><tr><td class="dep-name">cheshire</td><td class="dotted"><hr /></td><td class="dep-version">2.0.2</td></tr><tr><td class="dep-name">slingshot</td><td class="dotted"><hr /></td><td class="dep-version">0.9.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#tentacles.core">tentacles.core</a></li><li><a href="#tentacles.data">tentacles.data</a></li><li><a href="#tentacles.events">tentacles.events</a></li><li><a href="#tentacles.gists">tentacles.gists</a></li><li><a href="#tentacles.issues">tentacles.issues</a></li><li><a href="#tentacles.orgs">tentacles.orgs</a></li><li><a href="#tentacles.pulls">tentacles.pulls</a></li><li><a href="#tentacles.repos">tentacles.repos</a></li><li><a href="#tentacles.users">tentacles.users</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.core" name="tentacles.core"><h1 class="project-name">tentacles.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>The v3 version of the Github API is very simple and consistent. We're going to take
 the mini-functional-DSL approach to this. We'll just abstract over API requests and
 write a function for every API call. This results in a simple and consistent implementation
 that requires no macro-magic.</p>
@@ -3173,7 +3173,109 @@ Authentication is basic authentication.</p>
           (assoc req :query-params proper-query)))))))</pre></td></tr><tr><td class="docs"><p>Functions will call this to create API calls.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn api-call [method end-point positional query]
   (let [query (query-map query)]
-    (make-request method end-point positional query)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.events" name="tentacles.events"><h1 class="project-name">tentacles.events</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implements the Github Events API: http://developer.github.com/v3/events/</p>
+    (make-request method end-point positional query)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.data" name="tentacles.data"><h1 class="project-name">tentacles.data</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implements the Git Data API: http://developer.github.com/v3/git/blobs/</p>
+</td><td class="codes"><pre class="brush: clojure">(ns tentacles.data
+  (:use [tentacles.core :only [api-call]]))</pre></td></tr><tr><td class="docs"><h2>Blobs</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Get a blob.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn blob
+  [user repo sha &amp; [options]]
+  (api-call :get &quot;repos/%s/%s/git/blobs/%s&quot; [user repo sha] options))</pre></td></tr><tr><td class="docs"><p>Create a blob.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn create-blob
+  [user repo content encoding options]
+  (api-call :post &quot;repos/%s/%s/git/blobs&quot; [user repo]
+            (assoc options
+              :content content
+              :encoding encoding)))</pre></td></tr><tr><td class="docs"><h2>Commits</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Get a commit.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn commit
+  [user repo sha &amp; [options]]
+  (api-call :get &quot;repos/%s/%s/git/commits/%s&quot; [user repo sha] options))</pre></td></tr><tr><td class="docs"><p>Create a commit.
+   Options are:
+      parents   -- A sequence of SHAs of the commits that were
+                   the parents of this commit. If omitted, the
+                   commit will be written as a root commit.
+      author    -- A map of the following (string keys):
+                   "name"  -- Name of the author of the commit.
+                   "email" -- Email of the author of the commit.
+                   "date"  -- Timestamp when this commit was authored.
+      committer -- A map of the following (string keys):
+                   "name"  -- Name of the committer of the commit.
+                   "email" -- Email of the committer of the commit.
+                   "date"  -- Timestamp when this commit was committed.
+   If the committer section is omitted, then it will be filled in with author
+   data. If that is omitted, information will be obtained using the
+   authenticated user's information and the current date.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn create-commit
+  [user repo message tree options]
+  (api-call :post &quot;repos/%s/%s/git/commits&quot; [user repo]
+            (assoc options
+              :message message
+              :tree tree
+              :parents parents)))</pre></td></tr><tr><td class="docs"><h2>References</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Get a reference.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn reference
+  [user repo ref &amp; [options]]
+  (api-call :get &quot;repos/%s/%s/git/refs/%s&quot; [user repo ref] options))</pre></td></tr><tr><td class="docs"><p>Get all references.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn references
+  [user repo &amp; [options]]
+  (api-call :get &quot;repos/%s/%s/git/refs&quot; [user repo] options))</pre></td></tr><tr><td class="docs"><p>Create a new reference.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn create-reference
+  [user repo ref sha options]
+  (api-call :post &quot;repos/%s/%s/git/refs&quot; [user repo]
+            (assoc options
+              :ref ref
+              :sha sha)))</pre></td></tr><tr><td class="docs"><p>Edit a reference.
+   Options are:
+      force -- true or false (default); whether to force the update or make
+               sure this is a fast-forward update.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn edit-reference
+  [user repo ref sha options]
+  (api-call :post &quot;repos/%s/%s/git/refs/%s&quot; [user repo ref]
+            (assoc options :sha sha)))</pre></td></tr><tr><td class="docs"><h2>Tags</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Get a tag.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn tag
+  [user repo sha &amp; [options]]
+  (api-call :get &quot;repos/%s/%s/git/tags/%s&quot; [user repo sha] options))</pre></td></tr><tr><td class="docs"><p>Create a tag object. Note that this does not create the reference
+   that makes a tag in Git. If you want to create an annotated tag, you
+   have to do this call to create the tag object and then create the
+   <code>refs/tags/[tag]</code> reference. If you want to create a lightweight tag,
+   you simply need to create the reference and this call would be
+   unnecessary.
+   Options are:
+      tagger -- A map (string keys) containing the following:
+                "name"  -- Name of the author of this tag.
+                "email" -- Email of the author of this tag.
+                "date"  -- Timestamp when this object was tagged.</p>
+
+<p>The API documentation is unclear about which parts of this API call
+are optional.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn create-tag
+  [user repo tag message object type options]
+  (api-call :post &quot;repos/%s/%s/git/tags&quot; [user repo]
+            (assoc options
+              :tag tag
+              :message message
+              :object object
+              :type type)))</pre></td></tr><tr><td class="docs"><h2>Trees</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Get a tree.
+   Options are:
+      recursive -- true or false; get a tree recursively?</p>
+</td><td class="codes"><pre class="brush: clojure">(defn tree
+  [user repo sha &amp; [options]]
+  (api-call :get &quot;repos/%s/%s/git/trees/%s&quot; [user repo sha] options))</pre></td></tr><tr><td class="docs"><p>Create a tree. 'tree' is a map of the following (string keys):
+   path    -- The file referenced in the tree.
+   mode    -- The file mode; one of 100644 for file, 100755 for executable,
+              040000 for subdirectory, 160000 for submodule, or 120000 for
+              a blob that specifies the path of a symlink.
+   type    -- blog, tree, or commit.
+   sha     -- SHA of the object in the tree.
+   content -- Content that you want this file to have.
+   Options are:
+      base-tree -- SHA of the tree you want to update (if applicable).</p>
+</td><td class="codes"><pre class="brush: clojure">(defn create-tree
+  [user repo tree options]
+  (api-call :post &quot;repos/%s/%s/git/trees&quot; [user repo]
+            (assoc options :tree tree)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.events" name="tentacles.events"><h1 class="project-name">tentacles.events</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implements the Github Events API: http://developer.github.com/v3/events/</p>
 </td><td class="codes"><pre class="brush: clojure">(ns tentacles.events
   (:use [tentacles.core :only [api-call]]
         [slingshot.slingshot :only [try+]]))</pre></td></tr><tr><td class="docs"><p>List public events.</p>
@@ -3572,6 +3674,7 @@ complete...</p>
   [id user repo options]
   (nil? (api-call :delete &quot;teams/%s/repos/%s/%s&quot; [id user repo] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.pulls" name="tentacles.pulls"><h1 class="project-name">tentacles.pulls</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implement the Github Pull Requests API: http://developer.github.com/v3/pulls/</p>
 </td><td class="codes"><pre class="brush: clojure">(ns tentacles.pulls
+  (:refer-clojure :exclude [merge])
   (:use [tentacles.core :only [api-call]]
         [slingshot.slingshot :only [try+]]))</pre></td></tr><tr><td class="docs"><p>List pull requests on a repo.
    Options are:
@@ -3648,10 +3751,12 @@ to actually work. Commenting tha</p>
   [user repo id options]
   (nil? (api-call :delete &quot;repos/%s/%s/pulls/comments/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.repos" name="tentacles.repos"><h1 class="project-name">tentacles.repos</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implements the Github Repos API: http://developer.github.com/v3/repos/</p>
 </td><td class="codes"><pre class="brush: clojure">(ns tentacles.repos
-  (:use [clj-http.client :only [post]]
+  (:refer-clojure :exclude [keys])
+  (:use [clj-http.client :only [post put]]
         [clojure.java.io :only [file]]
-        [tentacles.core :only [api-call]]
-        [slingshot.slingshot :only [try+]]))</pre></td></tr><tr><td class="docs"><h2>Primary Repos API</h2>
+        [tentacles.core :only [api-call query-map]]
+        [slingshot.slingshot :only [try+]]
+        [cheshire.core :only [generate-string]]))</pre></td></tr><tr><td class="docs"><h2>Primary Repos API</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>List the authenticated user's repositories.
    Options are:
       type -- all (default), public, private, member.</p>
@@ -3903,13 +4008,31 @@ we use that to upload the file.</p>
   (nil? (api-call :post &quot;repos/%s/%s/hooks/%s/test&quot; [user repo id] options)))</pre></td></tr><tr><td class="docs"><p>Delete a hook.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-hook
   [user repo id options]
-  (nil? (api-call :delete &quot;repos/%s/%s/hooks/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.users" name="tentacles.users"><h1 class="project-name">tentacles.users</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implement the Github Users API: http://developer.github.com/v3/users/</p>
+  (nil? (api-call :delete &quot;repos/%s/%s/hooks/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="docs"><h2>PubSubHubbub</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Create or modify a pubsubhubub subscription.
+   Options are:
+      secret -- A shared secret key that generates an SHA HMAC of the
+                payload content.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn pubsubhubub
+  [user repo mode event callback &amp; [options]]
+  (nil?
+   (post &quot;https://api.github.com/hub&quot;
+         {:basic-auth (:auth options)
+          :form-params
+          (merge
+           {&quot;hub.mode&quot; mode
+            &quot;hub.topic&quot; (format &quot;https://github.com/%s/%s/events/%s&quot;
+                                user repo event)
+            &quot;hub.callback&quot; callback}
+           (when-let [secret (:secret options)]
+             {&quot;hub.secret&quot; secret}))})))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.users" name="tentacles.users"><h1 class="project-name">tentacles.users</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implement the Github Users API: http://developer.github.com/v3/users/</p>
 
 <p>The naming in this particular API implementation might be slightly different
 compared to the rest of the API implementations. Since you can only edit one
 user -- yourself -- it doesn't make sense to name it edit-user. Things like
 that.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns tentacles.users
+  (:refer-clojure :exclude [keys])
   (:use [tentacles.core :only [api-call]]
         [slingshot.slingshot :only [try+]]))</pre></td></tr><tr><td class="docs"><h2>Primary API</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
@@ -4001,5 +4124,5 @@ that.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-key
   &quot;Delete a public key.&quot;
   [id options]
-  (nil? (api-call :delete &quot;user/keys/%s&quot; [id] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_tentacles.core">tentacles.core</li><li class="floating-toc-li" id="floating-toc_tentacles.events">tentacles.events</li><li class="floating-toc-li" id="floating-toc_tentacles.gists">tentacles.gists</li><li class="floating-toc-li" id="floating-toc_tentacles.issues">tentacles.issues</li><li class="floating-toc-li" id="floating-toc_tentacles.orgs">tentacles.orgs</li><li class="floating-toc-li" id="floating-toc_tentacles.pulls">tentacles.pulls</li><li class="floating-toc-li" id="floating-toc_tentacles.repos">tentacles.repos</li><li class="floating-toc-li" id="floating-toc_tentacles.users">tentacles.users</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+  (nil? (api-call :delete &quot;user/keys/%s&quot; [id] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_tentacles.core">tentacles.core</li><li class="floating-toc-li" id="floating-toc_tentacles.data">tentacles.data</li><li class="floating-toc-li" id="floating-toc_tentacles.events">tentacles.events</li><li class="floating-toc-li" id="floating-toc_tentacles.gists">tentacles.gists</li><li class="floating-toc-li" id="floating-toc_tentacles.issues">tentacles.issues</li><li class="floating-toc-li" id="floating-toc_tentacles.orgs">tentacles.orgs</li><li class="floating-toc-li" id="floating-toc_tentacles.pulls">tentacles.pulls</li><li class="floating-toc-li" id="floating-toc_tentacles.repos">tentacles.repos</li><li class="floating-toc-li" id="floating-toc_tentacles.users">tentacles.users</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
