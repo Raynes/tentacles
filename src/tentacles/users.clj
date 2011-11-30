@@ -4,6 +4,7 @@
 ;; that.
 (ns tentacles.users
   "Implement the Github Users API: http://developer.github.com/v3/users/"
+  (:refer-clojure :exclude [keys])
   (:use [tentacles.core :only [api-call]]
         [slingshot.slingshot :only [try+]]))
 

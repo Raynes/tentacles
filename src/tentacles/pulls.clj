@@ -1,5 +1,6 @@
 (ns tentacles.pulls
   "Implement the Github Pull Requests API: http://developer.github.com/v3/pulls/"
+  (:refer-clojure :exclude [merge])
   (:use [tentacles.core :only [api-call]]
         [slingshot.slingshot :only [try+]]))
 
