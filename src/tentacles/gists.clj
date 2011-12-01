@@ -47,9 +47,12 @@
 (defn create-gist
   "Create a gist. files is a map of filenames to contents.
    Options are:
-      description -- A string description of the gist."
-  [files private? & [options]]
-  (api-call :post "gists" nil (file-map options files)))
+      description -- A string description of the gist.
+      public      -- true (default) or false; whether or not the gist is public."
+  [files & [options]]
+  (api-call :post "gists" nil
+            (assoc (file-map options files)
+              :public (:public options true))))
 
 ;; It makes sense to require the user to pass :files the way Github expects it
 ;; here: as a map of filenames to maps of :contents and/or :filename. It makes
