@@ -55,8 +55,8 @@
 
 (defn followers
   "List a user's followers."
-  [user]
-  (api-call :get "users/%s/followers" [user] nil))
+  [user & [options]]
+  (api-call :get "users/%s/followers" [user] options))
 
 (defn my-followers
   "List the authenticated user's followers."
@@ -65,8 +65,8 @@
 
 (defn following
   "List the users a user is following."
-  [user]
-  (api-call :get "users/%s/following" [user] nil))
+  [user & [options]]
+  (api-call :get "users/%s/following" [user] options))
 
 (defn my-following
   "List the users the authenticated user is following."
