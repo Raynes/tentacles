@@ -3122,7 +3122,7 @@ $(document).ready(function() {
     ul.css('margin-top', '0px')
 
 })
-</script><title>tentacles -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">tentacles</h1><h2 class="project-version">0.1.1</h2><br /><p>A library for working with the Github API.</p>
+</script><title>tentacles -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">tentacles</h1><h2 class="project-version">0.1.2</h2><br /><p>A library for working with the Github API.</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">clj-http</td><td class="dotted"><hr /></td><td class="dep-version">0.2.5</td></tr><tr><td class="dep-name">cheshire</td><td class="dotted"><hr /></td><td class="dep-version">2.0.2</td></tr><tr><td class="dep-name">slingshot</td><td class="dotted"><hr /></td><td class="dep-version">0.9.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#tentacles.core">tentacles.core</a></li><li><a href="#tentacles.data">tentacles.data</a></li><li><a href="#tentacles.events">tentacles.events</a></li><li><a href="#tentacles.gists">tentacles.gists</a></li><li><a href="#tentacles.issues">tentacles.issues</a></li><li><a href="#tentacles.orgs">tentacles.orgs</a></li><li><a href="#tentacles.pulls">tentacles.pulls</a></li><li><a href="#tentacles.repos">tentacles.repos</a></li><li><a href="#tentacles.users">tentacles.users</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.core" name="tentacles.core"><h1 class="project-name">tentacles.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>The v3 version of the Github API is very simple and consistent. We're going to take
 the mini-functional-DSL approach to this. We'll just abstract over API requests and
 write a function for every API call. This results in a simple and consistent implementation
@@ -4076,16 +4076,16 @@ that.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn followers
   &quot;List a user's followers.&quot;
-  [user]
-  (api-call :get &quot;users/%s/followers&quot; [user] nil))</pre></td></tr><tr><td class="docs">
+  [user &amp; [options]]
+  (api-call :get &quot;users/%s/followers&quot; [user] options))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn my-followers
   &quot;List the authenticated user's followers.&quot;
   [options]
   (api-call :get &quot;user/followers&quot; nil options))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn following
   &quot;List the users a user is following.&quot;
-  [user]
-  (api-call :get &quot;users/%s/following&quot; [user] nil))</pre></td></tr><tr><td class="docs">
+  [user &amp; [options]]
+  (api-call :get &quot;users/%s/following&quot; [user] options))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn my-following
   &quot;List the users the authenticated user is following.&quot;
   [options]
