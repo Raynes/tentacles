@@ -34,7 +34,7 @@
   height: auto !important;
   left: auto !important;
   line-height: 1.1em !important;
-  margin: 0 !important;
+/*  margin: 0 !important; */
   outline: 0 !important;
   overflow: visible !important;
   padding: 0 !important;
@@ -3139,11 +3139,29 @@ underscores. We'll use this little interim step to do it ourselves.</p>
   [entries]
   (into {}
         (for [[k v] entries]
-          [(.replace (name k) &quot;-&quot; &quot;_&quot;) v])))</pre></td></tr><tr><td class="docs"><p>Some Github API responses are 204 and thus have no body. We can't
-parse those as JSON, so we'll check for that first.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn safe-parse [req]
-  (when-not (= 204 (:status req))
-    (json/parse-string (:body req) true)))</pre></td></tr><tr><td class="docs"><p>We're using basic auth for authentication because oauth2 isn't really that
+          [(.replace (name k) &quot;-&quot; &quot;_&quot;) v])))</pre></td></tr><tr><td class="docs"><p>Same as json/parse-string but handles nil gracefully.</p>
+
+<p>cheshire's parse-string explodes on nil input. We'll use this to get around that.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn parse-json
+  [s] (when s (json/parse-string s true)))</pre></td></tr><tr><td class="docs"><p>Takes a response and checks for certain status codes. If 204, return nil.
+   If 400, 422, 404, 204, or 500, return the original response with the body parsed
+   as json. Otherwise, parse and return the body.</p>
+
+<p>Github returns a zillion and one HTTP status codes. Pretty much all of them
+have JSON bodies, so in the event of something going wrong, we'll return the
+entire request with the <code>:body</code> parsed as JSON. Note that 204s will almost never
+be translate to the client, since those usually indicate true or false values and
+are reflected as such by tentacles API fns.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn safe-parse
+  [resp]
+  (if (#{400 204 422 404 500} (:status resp))
+    (update-in resp [:body] parse-json)
+    (parse-json (:body resp))))</pre></td></tr><tr><td class="docs"><p>Takes a response and returns true if it is a 204 response, false otherwise.</p>
+
+<p>Github usually throws you 204 responses for 'true' and 404 for 'false'. We want
+to translate to booleans.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn no-content?
+  [x] (= (:status x) 204))</pre></td></tr><tr><td class="docs"><p>We're using basic auth for authentication because oauth2 isn't really that
 easy to work with, and isn't really applicable to desktop applications (at
 this point, Github itself recommends basic auth for desktop apps).</p>
 
@@ -3162,12 +3180,16 @@ map before it is used as query params or JSON data). This is either a
 string like "username:password" or a vector like ["username" "password"].
 Authentication is basic authentication.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn make-request [method end-point positional query]
-  (let [req {:url (str url (apply format end-point positional))
-             :basic-auth (query &quot;auth&quot;)
-             :method method}]
+  (let [req (merge
+             {:url (str url (apply format end-point positional))
+              :basic-auth (query &quot;auth&quot;)
+              :throw-exceptions false
+              :method method}
+             (when (query &quot;oauth_token&quot;)
+               {:headers {&quot;Authorization&quot; (str &quot;token &quot; (query &quot;oauth_token&quot;))}}))]
     (safe-parse
      (http/request
-      (let [proper-query (dissoc query &quot;auth&quot;)]
+      (let [proper-query (dissoc query &quot;auth&quot; &quot;oauth_token&quot;)]
         (if (#{:post :put :delete} method)
           (assoc req :body (json/generate-string (or (proper-query &quot;raw&quot;) proper-query)))
           (assoc req :query-params proper-query)))))))</pre></td></tr><tr><td class="docs"><p>Functions will call this to create API calls.</p>
@@ -3277,8 +3299,7 @@ are optional.</p>
   (api-call :post &quot;repos/%s/%s/git/trees&quot; [user repo]
             (assoc options :tree tree)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.events" name="tentacles.events"><h1 class="project-name">tentacles.events</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implements the Github Events API: http://developer.github.com/v3/events/</p>
 </td><td class="codes"><pre class="brush: clojure">(ns tentacles.events
-  (:use [tentacles.core :only [api-call]]
-        [slingshot.slingshot :only [try+]]))</pre></td></tr><tr><td class="docs"><p>List public events.</p>
+  (:use [tentacles.core :only [api-call]]))</pre></td></tr><tr><td class="docs"><p>List public events.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn events
   []
   (api-call :get &quot;events&quot; nil nil))</pre></td></tr><tr><td class="docs"><p>List repository events.</p>
@@ -3307,8 +3328,7 @@ right now.</p>
   [user org options]
   (api-call :get &quot;users/%s/events/orgs/%s&quot; [user org] options))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.gists" name="tentacles.gists"><h1 class="project-name">tentacles.gists</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implements the Github Gists API: http://developer.github.com/v3/gists/</p>
 </td><td class="codes"><pre class="brush: clojure">(ns tentacles.gists
-  (:use [tentacles.core :only [api-call]]
-        [slingshot.slingshot :only [try+]]))</pre></td></tr><tr><td class="docs"><h2>Primary gist API</h2>
+  (:use [tentacles.core :only [api-call no-content?]]))</pre></td></tr><tr><td class="docs"><h2>Primary gist API</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>List a user's gists.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn user-gists
   [user &amp; [options]]
@@ -3363,24 +3383,22 @@ map is a clean way to express this update.</p>
   (api-call :post &quot;gists/%s&quot; [id] options))</pre></td></tr><tr><td class="docs"><p>Star a gist.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn star-gist
   [id &amp; [options]]
-  (nil? (api-call :put &quot;gists/%s/star&quot; [id] options)))</pre></td></tr><tr><td class="docs"><p>Unstar a gist.</p>
+  (no-content? (api-call :put &quot;gists/%s/star&quot; [id] options)))</pre></td></tr><tr><td class="docs"><p>Unstar a gist.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn unstar-gist
   [id &amp; [options]]
-  (nil? (api-call :delete &quot;gists/%s/star&quot; [id] options)))</pre></td></tr><tr><td class="docs"><p>Check if a gist is starred.</p>
+  (no-content? (api-call :delete &quot;gists/%s/star&quot; [id] options)))</pre></td></tr><tr><td class="docs"><p>Check if a gist is starred.</p>
 
 <p>Github sends 404 which clj-http throws an exception for if a gist
 is not starred. I'd rather get back true or false.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn starred?
   [id &amp; [options]]
-  (try+
-   (nil? (api-call :get &quot;gists/%s/star&quot; [id] options))
-   (catch [:status 404] _ false)))</pre></td></tr><tr><td class="docs"><p>Fork a gist.</p>
+  (no-content? (api-call :get &quot;gists/%s/star&quot; [id] options)))</pre></td></tr><tr><td class="docs"><p>Fork a gist.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn fork-gist
   [id &amp; [options]]
   (api-call :post &quot;gists/%s/fork&quot; [id] options))</pre></td></tr><tr><td class="docs"><p>Delete a gist.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-gist
   [id &amp; [options]]
-  (nil? (api-call :delete &quot;gists/%s&quot; [id] options)))</pre></td></tr><tr><td class="docs"><h2>Gist Comments API</h2>
+  (no-content? (api-call :delete &quot;gists/%s&quot; [id] options)))</pre></td></tr><tr><td class="docs"><h2>Gist Comments API</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>List comments for a gist.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn comments
   [id &amp; [options]]
@@ -3396,9 +3414,9 @@ is not starred. I'd rather get back true or false.</p>
   (api-call :post &quot;gists/comments/%s&quot; [comment-id] (assoc options :body body)))</pre></td></tr><tr><td class="docs"><p>Delete a comment.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-comment
   [comment-id options]
-  (nil? (api-call :delete &quot;gists/comments/%s&quot; [comment-id] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.issues" name="tentacles.issues"><h1 class="project-name">tentacles.issues</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implements the Github Issues API: http://developer.github.com/v3/issues/</p>
+  (no-content? (api-call :delete &quot;gists/comments/%s&quot; [comment-id] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.issues" name="tentacles.issues"><h1 class="project-name">tentacles.issues</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implements the Github Issues API: http://developer.github.com/v3/issues/</p>
 </td><td class="codes"><pre class="brush: clojure">(ns tentacles.issues
-  (:use [tentacles.core :only [api-call]]
+  (:use [tentacles.core :only [api-call no-content?]]
         [clojure.string :only [join]]))</pre></td></tr><tr><td class="docs"><p>Some API requests, namely GET ones, require that labels be passed as a
 comma-delimited string of labels. The POST requests want it to be passed
 as a list of strings. In order to be consistent, users will always pass
@@ -3483,7 +3501,7 @@ on GETs is transparent to the user.</p>
             [user repo comment-id] (assoc options :body body)))</pre></td></tr><tr><td class="docs"><p>Delete a comment.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-comment
   [user repo comment-id options]
-  (nil?
+  (no-content?
    (api-call :delete &quot;repos/%s/%s/issues/comments/%s&quot;
              [user repo comment-id] options)))</pre></td></tr><tr><td class="docs"><h2>Issue Event API</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>List events for an issue.</p>
@@ -3516,7 +3534,7 @@ on GETs is transparent to the user.</p>
             [user repo id] (assoc options :name name :color color)))</pre></td></tr><tr><td class="docs"><p>Delete a label.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-label
   [user repo id options]
-  (nil? (api-call :delete &quot;repos/%s/%s/labels/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="docs"><p>Add labels to an issue.</p>
+  (no-content? (api-call :delete &quot;repos/%s/%s/labels/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="docs"><p>Add labels to an issue.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn add-labels
   [user repo issue-id labels options]
   (api-call :post &quot;repos/%s/%s/issues/%s/labels&quot;
@@ -3531,7 +3549,7 @@ on GETs is transparent to the user.</p>
             [user repo issue-id] (assoc options :raw labels)))</pre></td></tr><tr><td class="docs"><p>Remove all labels from an issue.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn remove-all-labels
   [user repo issue-id options]
-  (nil? (api-call :delete &quot;repos/%s/%s/issues/%s/labels&quot; [user repo issue-id] options)))</pre></td></tr><tr><td class="docs"><p>Get labels for every issue in a milestone.</p>
+  (no-content? (api-call :delete &quot;repos/%s/%s/issues/%s/labels&quot; [user repo issue-id] options)))</pre></td></tr><tr><td class="docs"><p>Get labels for every issue in a milestone.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn milestone-labels
   [user repo stone-id &amp; [options]]
   (api-call :get &quot;repos/%s/%s/milestones/%s/labels&quot; [user repo stone-id] options))</pre></td></tr><tr><td class="docs"><h2>Issue Milestones API</h2>
@@ -3564,10 +3582,9 @@ on GETs is transparent to the user.</p>
             [user repo id] (assoc options :title title)))</pre></td></tr><tr><td class="docs"><p>Delete a milestone.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-milestone
   [user repo id options]
-  (nil? (api-call :delete &quot;repos/%s/%s/milestones/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.orgs" name="tentacles.orgs"><h1 class="project-name">tentacles.orgs</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implements the Github Orgs API: http://developer.github.com/v3/orgs/</p>
+  (no-content? (api-call :delete &quot;repos/%s/%s/milestones/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.orgs" name="tentacles.orgs"><h1 class="project-name">tentacles.orgs</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implements the Github Orgs API: http://developer.github.com/v3/orgs/</p>
 </td><td class="codes"><pre class="brush: clojure">(ns tentacles.orgs
-  (:use [tentacles.core :only [api-call]]
-        [slingshot.slingshot :only [try+]]))</pre></td></tr><tr><td class="docs"><h2>Primary API</h2>
+  (:use [tentacles.core :only [api-call no-content?]]))</pre></td></tr><tr><td class="docs"><h2>Primary API</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>List the public organizations for a user.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn user-orgs
   [user]
@@ -3596,13 +3613,11 @@ on GETs is transparent to the user.</p>
   (api-call :get &quot;orgs/%s/members&quot; [org] options))</pre></td></tr><tr><td class="docs"><p>Check whether or not a user is a member.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn member?
   [org user options]
-  (try+
-   (nil? (api-call :get &quot;orgs/%s/members/%s&quot; [org user] options))
-   (catch [:status 404] _ false)))</pre></td></tr><tr><td class="docs"><p>Remove a member from all teams and eliminate access to the organization's
+  (no-content? (api-call :get &quot;orgs/%s/members/%s&quot; [org user] options)))</pre></td></tr><tr><td class="docs"><p>Remove a member from all teams and eliminate access to the organization's
    repositories.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-member
   [org user options]
-  (nil? (api-call :delete &quot;orgs/%s/members/%s&quot; [org user] options)))</pre></td></tr><tr><td class="docs"><p>List the public members of an organization.</p>
+  (no-content? (api-call :delete &quot;orgs/%s/members/%s&quot; [org user] options)))</pre></td></tr><tr><td class="docs"><p>List the public members of an organization.</p>
 
 <p><code>members</code> already does this if you aren't authenticated, but for the sake of being
 complete...</p>
@@ -3611,15 +3626,13 @@ complete...</p>
   (api-call :get &quot;orgs/%s/public_members&quot; [org] options))</pre></td></tr><tr><td class="docs"><p>Check if a user is a public member or not.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn public-member?
   [org user &amp; [options]]
-  (try+
-   (nil? (api-call :get &quot;orgs/%s/public_members/%s&quot; [org user] options))
-   (catch [:status 404] _ false)))</pre></td></tr><tr><td class="docs"><p>Make a user public.</p>
+  (no-content? (api-call :get &quot;orgs/%s/public_members/%s&quot; [org user] options)))</pre></td></tr><tr><td class="docs"><p>Make a user public.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn publicize
   [org user options]
-  (nil? (api-call :put &quot;orgs/%s/public_members/%s&quot; [org user] options)))</pre></td></tr><tr><td class="docs"><p>Conceal a user's membership.</p>
+  (no-content? (api-call :put &quot;orgs/%s/public_members/%s&quot; [org user] options)))</pre></td></tr><tr><td class="docs"><p>Conceal a user's membership.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn conceal
   [org user options]
-  (nil? (api-call :delete &quot;orgs/%s/public_members/%s&quot; [org user] options)))</pre></td></tr><tr><td class="docs"><h2>Org Teams API</h2>
+  (no-content? (api-call :delete &quot;orgs/%s/public_members/%s&quot; [org user] options)))</pre></td></tr><tr><td class="docs"><h2>Org Teams API</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>List the teams for an organization.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn teams
   [org options]
@@ -3647,47 +3660,46 @@ complete...</p>
   (api-call :post &quot;teams/%s&quot; [id] options))</pre></td></tr><tr><td class="docs"><p>Delete a team.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-team
   [id options]
-  (nil? (api-call :delete &quot;teams/%s&quot; [id] options)))</pre></td></tr><tr><td class="docs"><p>List members of a team.</p>
+  (no-content? (api-call :delete &quot;teams/%s&quot; [id] options)))</pre></td></tr><tr><td class="docs"><p>List members of a team.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn team-members
   [id options]
   (api-call :get &quot;teams/%s/members&quot; [id] options))</pre></td></tr><tr><td class="docs"><p>Get a specific team member.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn team-member?
   [id user options]
-  (try+
-   (nil? (api-call :get &quot;teams/%s/members/%s&quot; [id user] options))
-   (catch [:status 404] _ false)))</pre></td></tr><tr><td class="docs"><p>Add a team member.</p>
+  (no-content? (api-call :get &quot;teams/%s/members/%s&quot; [id user] options)))</pre></td></tr><tr><td class="docs"><p>Add a team member.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn add-team-member
   [id user options]
-  (nil? (api-call :put &quot;teams/%s/members/%s&quot; [id user] options)))</pre></td></tr><tr><td class="docs"><p>Remove a team member.</p>
+  (no-content? (api-call :put &quot;teams/%s/members/%s&quot; [id user] options)))</pre></td></tr><tr><td class="docs"><p>Remove a team member.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-team-member
   [id user options]
-  (nil? (api-call :delete &quot;teams/%s/members/%s&quot; [id user] options)))</pre></td></tr><tr><td class="docs"><p>List the team repositories.</p>
+  (no-content? (api-call :delete &quot;teams/%s/members/%s&quot; [id user] options)))</pre></td></tr><tr><td class="docs"><p>List the team repositories.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn list-team-repos
   [id options]
   (api-call :get &quot;teams/%s/repos&quot; [id] options))</pre></td></tr><tr><td class="docs"><p>Check if a repo is managed by this team.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn team-repo?
   [id user repo options]
-  (try+
-   (nil? (api-call :get &quot;teams/%s/repos/%s/%s&quot; [id user repo] options))
-   (catch [:status 404] _ false)))</pre></td></tr><tr><td class="docs"><p>Add a team repo.</p>
+  (no-content? (api-call :get &quot;teams/%s/repos/%s/%s&quot; [id user repo] options)))</pre></td></tr><tr><td class="docs"><p>Add a team repo.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn add-team-repo
   [id user repo options]
-  (nil? (api-call :put &quot;teams/%s/repos/%s/%s&quot; [id user repo] options)))</pre></td></tr><tr><td class="docs"><p>Remove a repo from a team.</p>
+  (no-content? (api-call :put &quot;teams/%s/repos/%s/%s&quot; [id user repo] options)))</pre></td></tr><tr><td class="docs"><p>Remove a repo from a team.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-team-repo
   [id user repo options]
-  (nil? (api-call :delete &quot;teams/%s/repos/%s/%s&quot; [id user repo] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.pulls" name="tentacles.pulls"><h1 class="project-name">tentacles.pulls</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implement the Github Pull Requests API: http://developer.github.com/v3/pulls/</p>
+  (no-content? (api-call :delete &quot;teams/%s/repos/%s/%s&quot; [id user repo] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.pulls" name="tentacles.pulls"><h1 class="project-name">tentacles.pulls</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implement the Github Pull Requests API: http://developer.github.com/v3/pulls/</p>
 </td><td class="codes"><pre class="brush: clojure">(ns tentacles.pulls
   (:refer-clojure :exclude [merge])
-  (:use [tentacles.core :only [api-call]]
-        [slingshot.slingshot :only [try+]]))</pre></td></tr><tr><td class="docs"><p>List pull requests on a repo.
-   Options are:
-      state -- open (default), closed.</p>
+  (:use [tentacles.core :only [api-call empty?]]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn pulls
+  &quot;List pull requests on a repo.
+   Options are:
+      state -- open (default), closed.&quot;
   [user repo &amp; [options]]
-  (api-call :get &quot;repos/%s/%s/pulls&quot; [user repo] options))</pre></td></tr><tr><td class="docs"><p>Get a specific pull request.</p>
+  (api-call :get &quot;repos/%s/%s/pulls&quot; [user repo] options))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn specific-pull
+  &quot;Get a specific pull request.&quot;
   [user repo id &amp; [options]]
-  (api-call :get &quot;repos/%s/%s/pulls/%s&quot; [user repo id] options))</pre></td></tr><tr><td class="docs"><p>Create a new pull request. If from is a number, it is considered
+  (api-call :get &quot;repos/%s/%s/pulls/%s&quot; [user repo id] options))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn create-pull
+  &quot;Create a new pull request. If from is a number, it is considered
    to be an issue number on the repository in question. If this is used,
    the pull request will be created from the existing issue. If it is a
    string it is considered to be a title. base is the branch or ref that
@@ -3695,8 +3707,7 @@ complete...</p>
    your changes are implemented.
    Options are:
       body -- The body of the pull request text. Only applies when not
-              creating a pull request from an issue.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn create-pull
+              creating a pull request from an issue.&quot;
   ([user repo from base head options]
      (api-call :post &quot;repos/%s/%s/pulls&quot; [user repo]
                (let [base-opts (assoc options
@@ -3704,61 +3715,66 @@ complete...</p>
                                  :head head)]
                  (if (number? from)
                    (assoc base-opts :issue from)
-                   (assoc base-opts :title from))))))</pre></td></tr><tr><td class="docs"><p>Edit a pull request.
+                   (assoc base-opts :title from))))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn edit-pull
+  &quot;Edit a pull request.
    Options are:
       title -- a new title.
       body  -- a new body.
-      state -- open or closed.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn edit-pull
+      state -- open or closed.&quot;
   [user repo id options]
-  (api-call :post &quot;repos/%s/%s/pulls/%s&quot; [user repo id] options))</pre></td></tr><tr><td class="docs"><p>List the commits on a pull request.</p>
+  (api-call :post &quot;repos/%s/%s/pulls/%s&quot; [user repo id] options))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn commits
+  &quot;List the commits on a pull request.&quot;
   [user repo id &amp; [options]]
-  (api-call :get &quot;repos/%s/%s/pulls/%s/commits&quot; [user repo id] options))</pre></td></tr><tr><td class="docs"><p>List the files on a pull request.</p>
+  (api-call :get &quot;repos/%s/%s/pulls/%s/commits&quot; [user repo id] options))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn files
+  &quot;List the files on a pull request.&quot;
   [user repo id &amp; [options]]
-  (api-call :get &quot;repos/%s/%s/pulls/%s/files&quot; [user repo id] options))</pre></td></tr><tr><td class="docs"><p>Check if a pull request has been merged.</p>
+  (api-call :get &quot;repos/%s/%s/pulls/%s/files&quot; [user repo id] options))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn merged?
+  &quot;Check if a pull request has been merged.&quot;
   [user repo id &amp; [options]]
-  (try+
-   (nil? (api-call :get &quot;repos/%s/%s/pulls/%s/merge&quot; [user repo id] options))
-   (catch [:status 404] _ false)))</pre></td></tr><tr><td class="docs"><p>Merge a pull request.
-   Options are:
-      commit-message -- A commit message for the merge commit.</p>
+  (empty? (api-call :get &quot;repos/%s/%s/pulls/%s/merge&quot; [user repo id] options)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn merge
+  &quot;Merge a pull request.
+   Options are:
+      commit-message -- A commit message for the merge commit.&quot;
   [user repo id options]
   (api-call :put &quot;repos/%s/%s/pulls/%s/merge&quot; [user repo id] options))</pre></td></tr><tr><td class="docs"><h2>Pull Request Comment API</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>List comments on a pull request.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn comments
+  &quot;List comments on a pull request.&quot;
   [user repo id &amp; [options]]
-  (api-call :get &quot;repos/%s/%s/pulls/%s/comments&quot; [user repo id] options))</pre></td></tr><tr><td class="docs"><p>Get a specific comment on a pull request.</p>
+  (api-call :get &quot;repos/%s/%s/pulls/%s/comments&quot; [user repo id] options))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn specific-comment
+  &quot;Get a specific comment on a pull request.&quot;
   [user repo id &amp; [options]]
-  (api-call :get &quot;repos/%s/%s/pulls/comments/%s&quot; [user repo id] options))</pre></td></tr><tr><td class="docs"><p>Create a comment on a pull request.</p>
-
-<p>You're supposed to be able to reply to comments as well, but that doesn't seem
+  (api-call :get &quot;repos/%s/%s/pulls/comments/%s&quot; [user repo id] options))</pre></td></tr><tr><td class="docs"><p>You're supposed to be able to reply to comments as well, but that doesn't seem
 to actually work. Commenting tha</p>
 </td><td class="codes"><pre class="brush: clojure">(defn create-comment
+  &quot;Create a comment on a pull request.&quot;
   [user repo id sha path position body options]
   (api-call :post &quot;repos/%s/%s/pulls/%s/comments&quot; [user repo id]
             (assoc options
               :commit-id sha
               :path path
               :position position
-              :body body)))</pre></td></tr><tr><td class="docs"><p>Edit a comment on a pull request.</p>
+              :body body)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn edit-comment
+  &quot;Edit a comment on a pull request.&quot;
   [user repo id body options]
   (api-call :post &quot;repos/%s/%s/pulls/comments/%s&quot; [user repo id]
-            (assoc options :body body)))</pre></td></tr><tr><td class="docs"><p>Delete a comment on a pull request.</p>
+            (assoc options :body body)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn delete-comment
+  &quot;Delete a comment on a pull request.&quot;
   [user repo id options]
-  (nil? (api-call :delete &quot;repos/%s/%s/pulls/comments/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.repos" name="tentacles.repos"><h1 class="project-name">tentacles.repos</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implements the Github Repos API: http://developer.github.com/v3/repos/</p>
+  (empty? (api-call :delete &quot;repos/%s/%s/pulls/comments/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.repos" name="tentacles.repos"><h1 class="project-name">tentacles.repos</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implements the Github Repos API: http://developer.github.com/v3/repos/</p>
 </td><td class="codes"><pre class="brush: clojure">(ns tentacles.repos
   (:refer-clojure :exclude [keys])
   (:use [clj-http.client :only [post put]]
         [clojure.java.io :only [file]]
-        [tentacles.core :only [api-call query-map]]
-        [slingshot.slingshot :only [try+]]
+        [tentacles.core :only [api-call no-content?]]
         [cheshire.core :only [generate-string]]))</pre></td></tr><tr><td class="docs"><h2>Primary Repos API</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>List the authenticated user's repositories.
    Options are:
@@ -3840,15 +3856,13 @@ to actually work. Commenting tha</p>
   (api-call :get &quot;repos/%s/%s/collaborators&quot; [user repo] options))</pre></td></tr><tr><td class="docs"><p>Check if a user is a collaborator.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn collaborator?
   [user repo collaborator &amp; [options]]
-  (try+
-   (nil? (api-call :get &quot;repos/%s/%s/collaborators/%s&quot; [user repo collaborator] options))
-   (catch [:status 404] _ false)))</pre></td></tr><tr><td class="docs"><p>Add a collaborator to a repository.</p>
+  (no-content? (api-call :get &quot;repos/%s/%s/collaborators/%s&quot; [user repo collaborator] options)))</pre></td></tr><tr><td class="docs"><p>Add a collaborator to a repository.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn add-collaborator
   [user repo collaborator options]
-  (nil? (api-call :put &quot;repos/%s/%s/collaborators/%s&quot; [user repo collaborator] options)))</pre></td></tr><tr><td class="docs"><p>Remove a collaborator from a repository.</p>
+  (no-content? (api-call :put &quot;repos/%s/%s/collaborators/%s&quot; [user repo collaborator] options)))</pre></td></tr><tr><td class="docs"><p>Remove a collaborator from a repository.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn remove-collaborator
   [user repo collaborator options]
-  (nil? (api-call :delete &quot;repos/%s/%s/collaborators/%s&quot; [user repo collaborator] options)))</pre></td></tr><tr><td class="docs"><h2>Repo Commits API</h2>
+  (no-content? (api-call :delete &quot;repos/%s/%s/collaborators/%s&quot; [user repo collaborator] options)))</pre></td></tr><tr><td class="docs"><h2>Repo Commits API</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>List commits for a repository.
    Options are:
       sha  -- Sha or branch to start lising commits from.
@@ -3896,7 +3910,7 @@ to just require one sha.</p>
   (api-call :get &quot;repos/%s/%s/compare/%s...%s&quot; [user repo base head] options))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn delete-commit-comment
   [user repo id options]
-  (nil? (api-call :delete &quot;repos/%s/%s/comments/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="docs"><h2>Repo Downloads API</h2>
+  (no-content? (api-call :delete &quot;repos/%s/%s/comments/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="docs"><h2>Repo Downloads API</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>List the downloads for a repository.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn downloads
   [user repo &amp; [options]]
@@ -3906,8 +3920,8 @@ to just require one sha.</p>
   (api-call :get &quot;repos/%s/%s/downloads/%s&quot; [user repo id] options))</pre></td></tr><tr><td class="docs"><p>Delete a download</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-download
   [user repo id options]
-  (nil? (api-call :delete &quot;repos/%s/%s/downloads/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="docs"><p>Get a download resource for a file you want to upload. This will be
-   passed to upload-file to actually upload your file.</p>
+  (no-content? (api-call :delete &quot;repos/%s/%s/downloads/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="docs"><p>Get a download resource for a file you want to upload. You can pass it
+   to upload-file to actually upload your file.</p>
 
 <p>Github uploads are a two step process. First we get a download resource and then
 we use that to upload the file.</p>
@@ -3920,6 +3934,10 @@ we use that to upload the file.</p>
                        :name (.getName path)
                        :size (.length path)))
       :filepath path)))</pre></td></tr><tr><td class="docs"><p>Upload a file given a download resource obtained from download-resource.</p>
+
+<p>This isn't really even a Github API call, since it calls an Amazon API.
+As such, it doesn't provide the same guarentees as the rest of the API.
+We'll just return the raw response.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn upload-file
   [resp]
   (post (:s3_url resp)
@@ -3970,15 +3988,13 @@ we use that to upload the file.</p>
   (api-call :get &quot;users/%s/watched&quot; [user] options))</pre></td></tr><tr><td class="docs"><p>Check if you are watching a repository.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn watching?
   [user repo options]
-  (try+
-   (nil? (api-call :get &quot;user/watched/%s/%s&quot; [user repo] options))
-   (catch [:status 404] _ false)))</pre></td></tr><tr><td class="docs"><p>Watch a repository.</p>
+  (no-content? (api-call :get &quot;user/watched/%s/%s&quot; [user repo] options)))</pre></td></tr><tr><td class="docs"><p>Watch a repository.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn watch
   [user repo options]
-  (nil? (api-call :put &quot;user/watched/%s/%s&quot; [user repo] options)))</pre></td></tr><tr><td class="docs"><p>Unwatch a repository.</p>
+  (no-content? (api-call :put &quot;user/watched/%s/%s&quot; [user repo] options)))</pre></td></tr><tr><td class="docs"><p>Unwatch a repository.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn unwatch
   [user repo options]
-  (nil? (api-call :delete &quot;user/watched/%s/%s&quot; [user repo] options)))</pre></td></tr><tr><td class="docs"><h2>Repo Hooks API</h2>
+  (no-content? (api-call :delete &quot;user/watched/%s/%s&quot; [user repo] options)))</pre></td></tr><tr><td class="docs"><h2>Repo Hooks API</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>List the hooks on a repository.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn hooks
   [user repo options]
@@ -4008,17 +4024,17 @@ we use that to upload the file.</p>
   (api-call :post &quot;repos/%s/%s/hooks/%s&quot; [user repo id] options))</pre></td></tr><tr><td class="docs"><p>Test a hook.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn test-hook
   [user repo id options]
-  (nil? (api-call :post &quot;repos/%s/%s/hooks/%s/test&quot; [user repo id] options)))</pre></td></tr><tr><td class="docs"><p>Delete a hook.</p>
+  (no-content? (api-call :post &quot;repos/%s/%s/hooks/%s/test&quot; [user repo id] options)))</pre></td></tr><tr><td class="docs"><p>Delete a hook.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-hook
   [user repo id options]
-  (nil? (api-call :delete &quot;repos/%s/%s/hooks/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="docs"><h2>PubSubHubbub</h2>
+  (no-content? (api-call :delete &quot;repos/%s/%s/hooks/%s&quot; [user repo id] options)))</pre></td></tr><tr><td class="docs"><h2>PubSubHubbub</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Create or modify a pubsubhubub subscription.
    Options are:
       secret -- A shared secret key that generates an SHA HMAC of the
                 payload content.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn pubsubhubub
   [user repo mode event callback &amp; [options]]
-  (nil?
+  (no-content?
    (post &quot;https://api.github.com/hub&quot;
          {:basic-auth (:auth options)
           :form-params
@@ -4029,15 +4045,9 @@ we use that to upload the file.</p>
             &quot;hub.callback&quot; callback}
            (when-let [secret (:secret options)]
              {&quot;hub.secret&quot; secret}))})))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#tentacles.users" name="tentacles.users"><h1 class="project-name">tentacles.users</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Implement the Github Users API: http://developer.github.com/v3/users/</p>
-
-<p>The naming in this particular API implementation might be slightly different
-compared to the rest of the API implementations. Since you can only edit one
-user -- yourself -- it doesn't make sense to name it edit-user. Things like
-that.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns tentacles.users
   (:refer-clojure :exclude [keys])
-  (:use [tentacles.core :only [api-call]]
-        [slingshot.slingshot :only [try+]]))</pre></td></tr><tr><td class="docs"><h2>Primary API</h2>
+  (:use [tentacles.core :only [api-call no-content?]]))</pre></td></tr><tr><td class="docs"><h2>Primary API</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn user
   &quot;Get info about a user.&quot;
@@ -4072,7 +4082,7 @@ that.</p>
   &quot;Delete email address(es) from the authenticated user. Emails is either
    a string or a sequence of email addresses.&quot;
   [emails options]
-  (nil? (api-call :delete &quot;user/emails&quot; nil (assoc options :raw emails))))</pre></td></tr><tr><td class="docs"><p>User Followers API</p>
+  (no-content? (api-call :delete &quot;user/emails&quot; nil (assoc options :raw emails))))</pre></td></tr><tr><td class="docs"><p>User Followers API</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn followers
   &quot;List a user's followers.&quot;
@@ -4093,17 +4103,15 @@ that.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn following?
   &quot;Check if the authenticated user is following another user.&quot;
   [user options]
-  (try+
-   (nil? (api-call :get &quot;user/following/%s&quot; [user] options))
-   (catch [:status 404] _ false)))</pre></td></tr><tr><td class="docs">
+  (no-content? (api-call :get &quot;user/following/%s&quot; [user] options)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn follow
   &quot;Follow a user.&quot;
   [user options]
-  (nil? (api-call :put &quot;user/following/%s&quot; [user] options)))</pre></td></tr><tr><td class="docs">
+  (no-content? (api-call :put &quot;user/following/%s&quot; [user] options)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn unfollow
   &quot;Unfollow a user.&quot;
   [user options]
-  (nil? (api-call :delete &quot;user/following/%s&quot; [user] options)))</pre></td></tr><tr><td class="docs"><p>User Keys API</p>
+  (no-content? (api-call :delete &quot;user/following/%s&quot; [user] options)))</pre></td></tr><tr><td class="docs"><p>User Keys API</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn keys
   &quot;List the authenticated user's public keys.&quot;
@@ -4127,5 +4135,5 @@ that.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn delete-key
   &quot;Delete a public key.&quot;
   [id options]
-  (nil? (api-call :delete &quot;user/keys/%s&quot; [id] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_tentacles.core">tentacles.core</li><li class="floating-toc-li" id="floating-toc_tentacles.data">tentacles.data</li><li class="floating-toc-li" id="floating-toc_tentacles.events">tentacles.events</li><li class="floating-toc-li" id="floating-toc_tentacles.gists">tentacles.gists</li><li class="floating-toc-li" id="floating-toc_tentacles.issues">tentacles.issues</li><li class="floating-toc-li" id="floating-toc_tentacles.orgs">tentacles.orgs</li><li class="floating-toc-li" id="floating-toc_tentacles.pulls">tentacles.pulls</li><li class="floating-toc-li" id="floating-toc_tentacles.repos">tentacles.repos</li><li class="floating-toc-li" id="floating-toc_tentacles.users">tentacles.users</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+  (no-content? (api-call :delete &quot;user/keys/%s&quot; [id] options)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_tentacles.core">tentacles.core</li><li class="floating-toc-li" id="floating-toc_tentacles.data">tentacles.data</li><li class="floating-toc-li" id="floating-toc_tentacles.events">tentacles.events</li><li class="floating-toc-li" id="floating-toc_tentacles.gists">tentacles.gists</li><li class="floating-toc-li" id="floating-toc_tentacles.issues">tentacles.issues</li><li class="floating-toc-li" id="floating-toc_tentacles.orgs">tentacles.orgs</li><li class="floating-toc-li" id="floating-toc_tentacles.pulls">tentacles.pulls</li><li class="floating-toc-li" id="floating-toc_tentacles.repos">tentacles.repos</li><li class="floating-toc-li" id="floating-toc_tentacles.users">tentacles.users</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
