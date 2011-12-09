@@ -43,12 +43,16 @@
 ;; string like "username:password" or a vector like ["username" "password"].
 ;; Authentication is basic authentication.
 (defn make-request [method end-point positional query]
-  (let [req {:url (str url (apply format end-point positional))
-             :basic-auth (query "auth")
-             :method method}]
+  (let [req (merge
+             {:url (str url (apply format end-point positional))
+              :basic-auth (query "auth")
+              :throw-exceptions false
+              :method method}
+             (when (query "oauth_token")
+               {:headers {"Authorization" (str "token " (query "oauth_token"))}}))]
     (safe-parse
      (http/request
-      (let [proper-query (dissoc query "auth")]
+      (let [proper-query (dissoc query "auth" "oauth_token")]
         (if (#{:post :put :delete} method)
           (assoc req :body (json/generate-string (or (proper-query "raw") proper-query)))
           (assoc req :query-params proper-query)))))))
