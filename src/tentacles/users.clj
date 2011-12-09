@@ -1,7 +1,3 @@
-;; The naming in this particular API implementation might be slightly different
-;; compared to the rest of the API implementations. Since you can only edit one
-;; user -- yourself -- it doesn't make sense to name it edit-user. Things like
-;; that.
 (ns tentacles.users
   "Implement the Github Users API: http://developer.github.com/v3/users/"
   (:refer-clojure :exclude [keys])
