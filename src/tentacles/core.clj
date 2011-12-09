@@ -3,7 +3,6 @@
 ;; write a function for every API call. This results in a simple and consistent implementation
 ;; that requires no macro-magic.
 (ns tentacles.core
-  (:refer-clojure :exclude [empty?])
   (:require [clj-http.client :as http]
             [cheshire.core :as json]))
 
@@ -40,7 +39,7 @@
 
 ;; Github usually throws you 204 responses for 'true' and 404 for 'false'. We want
 ;; to translate to booleans.
-(defn empty?
+(defn no-content?
   "Takes a response and returns true if it is a 204 response, false otherwise."
   [x] (= (:status x) 204))
 
