@@ -3,6 +3,7 @@
 ;; write a function for every API call. This results in a simple and consistent implementation
 ;; that requires no macro-magic.
 (ns tentacles.core
+  (:refer-clojure :exclude [empty?])
   (:require [clj-http.client :as http]
             [cheshire.core :as json]))
 
@@ -18,11 +19,30 @@
         (for [[k v] entries]
           [(.replace (name k) "-" "_") v])))
 
-;; Some Github API responses are 204 and thus have no body. We can't
-;; parse those as JSON, so we'll check for that first.
-(defn safe-parse [req]
-  (when-not (= 204 (:status req))
-    (json/parse-string (:body req) true)))
+;; cheshire's parse-string explodes on nil input. We'll use this to get around that.
+(defn parse-json
+  "Same as json/parse-string but handles nil gracefully."
+  [s] (when s (json/parse-string s true)))
+
+;; Github returns a zillion and one HTTP status codes. Pretty much all of them
+;; have JSON bodies, so in the event of something going wrong, we'll return the
+;; entire request with the `:body` parsed as JSON. Note that 204s will almost never
+;; be translate to the client, since those usually indicate true or false values and
+;; are reflected as such by tentacles API fns.
+(defn safe-parse
+  "Takes a response and checks for certain status codes. If 204, return nil.
+   If 400, 422, 404, 204, or 500, return the original response with the body parsed
+   as json. Otherwise, parse and return the body."
+  [resp]
+  (if (#{400 204 422 404 500} (:status resp))
+    (update-in resp [:body] parse-json)
+    (parse-json (:body resp))))
+
+;; Github usually throws you 204 responses for 'true' and 404 for 'false'. We want
+;; to translate to booleans.
+(defn empty?
+  "Takes a response and returns true if it is a 204 response, false otherwise."
+  [x] (= (:status x) 204))
 
 ;; We're using basic auth for authentication because oauth2 isn't really that
 ;; easy to work with, and isn't really applicable to desktop applications (at

@@ -1,7 +1,6 @@
 (ns tentacles.orgs
   "Implements the Github Orgs API: http://developer.github.com/v3/orgs/"
-  (:use [tentacles.core :only [api-call]]
-        [slingshot.slingshot :only [try+]]))
+  (:use [tentacles.core :only [api-call empty?]]))
 
 ;; ## Primary API
 
@@ -44,15 +43,13 @@
 (defn member?
   "Check whether or not a user is a member."
   [org user options]
-  (try+
-   (nil? (api-call :get "orgs/%s/members/%s" [org user] options))
-   (catch [:status 404] _ false)))
+  (empty? (api-call :get "orgs/%s/members/%s" [org user] options)))
 
 (defn delete-member
   "Remove a member from all teams and eliminate access to the organization's
    repositories."
   [org user options]
-  (nil? (api-call :delete "orgs/%s/members/%s" [org user] options)))
+  (empty? (api-call :delete "orgs/%s/members/%s" [org user] options)))
 
 ;; `members` already does this if you aren't authenticated, but for the sake of being
 ;; complete...
@@ -64,19 +61,17 @@
 (defn public-member?
   "Check if a user is a public member or not."
   [org user & [options]]
-  (try+
-   (nil? (api-call :get "orgs/%s/public_members/%s" [org user] options))
-   (catch [:status 404] _ false)))
+  (empty? (api-call :get "orgs/%s/public_members/%s" [org user] options)))
 
 (defn publicize
   "Make a user public."
   [org user options]
-  (nil? (api-call :put "orgs/%s/public_members/%s" [org user] options)))
+  (empty? (api-call :put "orgs/%s/public_members/%s" [org user] options)))
 
 (defn conceal
   "Conceal a user's membership."
   [org user options]
-  (nil? (api-call :delete "orgs/%s/public_members/%s" [org user] options)))
+  (empty? (api-call :delete "orgs/%s/public_members/%s" [org user] options)))
 
 ;; ## Org Teams API
 
@@ -115,7 +110,7 @@
 (defn delete-team
   "Delete a team."
   [id options]
-  (nil? (api-call :delete "teams/%s" [id] options)))
+  (empty? (api-call :delete "teams/%s" [id] options)))
 
 (defn team-members
   "List members of a team."
@@ -125,19 +120,17 @@
 (defn team-member?
   "Get a specific team member."
   [id user options]
-  (try+
-   (nil? (api-call :get "teams/%s/members/%s" [id user] options))
-   (catch [:status 404] _ false)))
+  (empty? (api-call :get "teams/%s/members/%s" [id user] options)))
 
 (defn add-team-member
   "Add a team member."
   [id user options]
-  (nil? (api-call :put "teams/%s/members/%s" [id user] options)))
+  (empty? (api-call :put "teams/%s/members/%s" [id user] options)))
 
 (defn delete-team-member
   "Remove a team member."
   [id user options]
-  (nil? (api-call :delete "teams/%s/members/%s" [id user] options)))
+  (empty? (api-call :delete "teams/%s/members/%s" [id user] options)))
 
 (defn list-team-repos
   "List the team repositories."
@@ -147,16 +140,14 @@
 (defn team-repo?
   "Check if a repo is managed by this team."
   [id user repo options]
-  (try+
-   (nil? (api-call :get "teams/%s/repos/%s/%s" [id user repo] options))
-   (catch [:status 404] _ false)))
+  (empty? (api-call :get "teams/%s/repos/%s/%s" [id user repo] options)))
 
 (defn add-team-repo
   "Add a team repo."
   [id user repo options]
-  (nil? (api-call :put "teams/%s/repos/%s/%s" [id user repo] options)))
+  (empty? (api-call :put "teams/%s/repos/%s/%s" [id user repo] options)))
 
 (defn delete-team-repo
   "Remove a repo from a team."
   [id user repo options]
-  (nil? (api-call :delete "teams/%s/repos/%s/%s" [id user repo] options)))
+  (empty? (api-call :delete "teams/%s/repos/%s/%s" [id user repo] options)))

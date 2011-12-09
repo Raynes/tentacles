@@ -5,8 +5,7 @@
 (ns tentacles.users
   "Implement the Github Users API: http://developer.github.com/v3/users/"
   (:refer-clojure :exclude [keys])
-  (:use [tentacles.core :only [api-call]]
-        [slingshot.slingshot :only [try+]]))
+  (:use [tentacles.core :only [api-call empty?]]))
 
 ;; ## Primary API
 
@@ -49,7 +48,7 @@
   "Delete email address(es) from the authenticated user. Emails is either
    a string or a sequence of email addresses."
   [emails options]
-  (nil? (api-call :delete "user/emails" nil (assoc options :raw emails))))
+  (empty? (api-call :delete "user/emails" nil (assoc options :raw emails))))
 
 ;; User Followers API
 
@@ -76,19 +75,17 @@
 (defn following?
   "Check if the authenticated user is following another user."
   [user options]
-  (try+
-   (nil? (api-call :get "user/following/%s" [user] options))
-   (catch [:status 404] _ false)))
+  (empty? (api-call :get "user/following/%s" [user] options)))
 
 (defn follow
   "Follow a user."
   [user options]
-  (nil? (api-call :put "user/following/%s" [user] options)))
+  (empty? (api-call :put "user/following/%s" [user] options)))
 
 (defn unfollow
   "Unfollow a user."
   [user options]
-  (nil? (api-call :delete "user/following/%s" [user] options)))
+  (empty? (api-call :delete "user/following/%s" [user] options)))
 
 ;; User Keys API
 
@@ -118,4 +115,4 @@
 (defn delete-key
   "Delete a public key."
   [id options]
-  (nil? (api-call :delete "user/keys/%s" [id] options)))
+  (empty? (api-call :delete "user/keys/%s" [id] options)))

@@ -3,8 +3,7 @@
   (:refer-clojure :exclude [keys])
   (:use [clj-http.client :only [post put]]
         [clojure.java.io :only [file]]
-        [tentacles.core :only [api-call query-map]]
-        [slingshot.slingshot :only [try+]]
+        [tentacles.core :only [api-call empty?]]
         [cheshire.core :only [generate-string]]))
 
 ;; ## Primary Repos API
@@ -116,19 +115,17 @@
 (defn collaborator?
   "Check if a user is a collaborator."
   [user repo collaborator & [options]]
-  (try+
-   (nil? (api-call :get "repos/%s/%s/collaborators/%s" [user repo collaborator] options))
-   (catch [:status 404] _ false)))
+  (empty? (api-call :get "repos/%s/%s/collaborators/%s" [user repo collaborator] options)))
 
 (defn add-collaborator
   "Add a collaborator to a repository."
   [user repo collaborator options]
-  (nil? (api-call :put "repos/%s/%s/collaborators/%s" [user repo collaborator] options)))
+  (empty? (api-call :put "repos/%s/%s/collaborators/%s" [user repo collaborator] options)))
 
 (defn remove-collaborator
   "Remove a collaborator from a repository."
   [user repo collaborator options]
-  (nil? (api-call :delete "repos/%s/%s/collaborators/%s" [user repo collaborator] options)))
+  (empty? (api-call :delete "repos/%s/%s/collaborators/%s" [user repo collaborator] options)))
 
 ;; ## Repo Commits API
 
@@ -192,7 +189,7 @@
 
 (defn delete-commit-comment
   [user repo id options]
-  (nil? (api-call :delete "repos/%s/%s/comments/%s" [user repo id] options)))
+  (empty? (api-call :delete "repos/%s/%s/comments/%s" [user repo id] options)))
 
 ;; ## Repo Downloads API
 
@@ -209,13 +206,13 @@
 (defn delete-download
   "Delete a download"
   [user repo id options]
-  (nil? (api-call :delete "repos/%s/%s/downloads/%s" [user repo id] options)))
+  (empty? (api-call :delete "repos/%s/%s/downloads/%s" [user repo id] options)))
 
 ;; Github uploads are a two step process. First we get a download resource and then
 ;; we use that to upload the file.
 (defn download-resource
-  "Get a download resource for a file you want to upload. This will be
-   passed to upload-file to actually upload your file."
+  "Get a download resource for a file you want to upload. You can pass it
+   to upload-file to actually upload your file."
   [user repo path options]
   (let [path (file path)]
     (assoc (api-call :post "repos/%s/%s/downloads"
@@ -225,6 +222,9 @@
                        :size (.length path)))
       :filepath path)))
 
+;; This isn't really even a Github API call, since it calls an Amazon API.
+;; As such, it doesn't provide the same guarentees as the rest of the API.
+;; We'll just return the raw response.
 (defn upload-file
   "Upload a file given a download resource obtained from download-resource."
   [resp]
@@ -299,19 +299,17 @@
 (defn watching?
   "Check if you are watching a repository."
   [user repo options]
-  (try+
-   (nil? (api-call :get "user/watched/%s/%s" [user repo] options))
-   (catch [:status 404] _ false)))
+  (empty? (api-call :get "user/watched/%s/%s" [user repo] options)))
 
 (defn watch
   "Watch a repository."
   [user repo options]
-  (nil? (api-call :put "user/watched/%s/%s" [user repo] options)))
+  (empty? (api-call :put "user/watched/%s/%s" [user repo] options)))
 
 (defn unwatch
   "Unwatch a repository."
   [user repo options]
-  (nil? (api-call :delete "user/watched/%s/%s" [user repo] options)))
+  (empty? (api-call :delete "user/watched/%s/%s" [user repo] options)))
 
 ;; ## Repo Hooks API
 
@@ -352,12 +350,12 @@
 (defn test-hook
   "Test a hook."
   [user repo id options]
-  (nil? (api-call :post "repos/%s/%s/hooks/%s/test" [user repo id] options)))
+  (empty? (api-call :post "repos/%s/%s/hooks/%s/test" [user repo id] options)))
 
 (defn delete-hook
   "Delete a hook."
   [user repo id options]
-  (nil? (api-call :delete "repos/%s/%s/hooks/%s" [user repo id] options)))
+  (empty? (api-call :delete "repos/%s/%s/hooks/%s" [user repo id] options)))
 
 ;; ## PubSubHubbub
 
@@ -367,7 +365,7 @@
       secret -- A shared secret key that generates an SHA HMAC of the
                 payload content."
   [user repo mode event callback & [options]]
-  (nil?
+  (empty?
    (post "https://api.github.com/hub"
          {:basic-auth (:auth options)
           :form-params

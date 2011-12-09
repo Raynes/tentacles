@@ -1,6 +1,6 @@
 (ns tentacles.issues
   "Implements the Github Issues API: http://developer.github.com/v3/issues/"
-  (:use [tentacles.core :only [api-call]]
+  (:use [tentacles.core :only [api-call empty?]]
         [clojure.string :only [join]]))
 
 ;; Some API requests, namely GET ones, require that labels be passed as a
@@ -105,7 +105,7 @@
 (defn delete-comment
   "Delete a comment."
   [user repo comment-id options]
-  (nil?
+  (empty?
    (api-call :delete "repos/%s/%s/issues/comments/%s"
              [user repo comment-id] options)))
 
@@ -158,7 +158,7 @@
 (defn delete-label
   "Delete a label."
   [user repo id options]
-  (nil? (api-call :delete "repos/%s/%s/labels/%s" [user repo id] options)))
+  (empty? (api-call :delete "repos/%s/%s/labels/%s" [user repo id] options)))
 
 (defn add-labels
   "Add labels to an issue."
@@ -181,7 +181,7 @@
 (defn remove-all-labels
   "Remove all labels from an issue."
   [user repo issue-id options]
-  (nil? (api-call :delete "repos/%s/%s/issues/%s/labels" [user repo issue-id] options)))
+  (empty? (api-call :delete "repos/%s/%s/issues/%s/labels" [user repo issue-id] options)))
 
 (defn milestone-labels
   "Get labels for every issue in a milestone."
@@ -227,4 +227,4 @@
 (defn delete-milestone
   "Delete a milestone."
   [user repo id options]
-  (nil? (api-call :delete "repos/%s/%s/milestones/%s" [user repo id] options)))
+  (empty? (api-call :delete "repos/%s/%s/milestones/%s" [user repo id] options)))

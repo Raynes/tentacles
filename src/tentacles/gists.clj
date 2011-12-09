@@ -1,7 +1,6 @@
 (ns tentacles.gists
   "Implements the Github Gists API: http://developer.github.com/v3/gists/"
-  (:use [tentacles.core :only [api-call]]
-        [slingshot.slingshot :only [try+]]))
+  (:use [tentacles.core :only [api-call empty?]]))
 
 ;; ## Primary gist API
 
@@ -74,21 +73,19 @@
 (defn star-gist
   "Star a gist."
   [id & [options]]
-  (nil? (api-call :put "gists/%s/star" [id] options)))
+  (empty? (api-call :put "gists/%s/star" [id] options)))
 
 (defn unstar-gist
   "Unstar a gist."
   [id & [options]]
-  (nil? (api-call :delete "gists/%s/star" [id] options)))
+  (empty? (api-call :delete "gists/%s/star" [id] options)))
 
 ;; Github sends 404 which clj-http throws an exception for if a gist
 ;; is not starred. I'd rather get back true or false.
 (defn starred?
   "Check if a gist is starred."
   [id & [options]]
-  (try+
-   (nil? (api-call :get "gists/%s/star" [id] options))
-   (catch [:status 404] _ false)))
+  (empty? (api-call :get "gists/%s/star" [id] options)))
 
 (defn fork-gist
   "Fork a gist."
@@ -98,7 +95,7 @@
 (defn delete-gist
   "Delete a gist."
   [id & [options]]
-  (nil? (api-call :delete "gists/%s" [id] options)))
+  (empty? (api-call :delete "gists/%s" [id] options)))
 
 ;; ## Gist Comments API
 
@@ -125,4 +122,4 @@
 (defn delete-comment
   "Delete a comment."
   [comment-id options]
-  (nil? (api-call :delete "gists/comments/%s" [comment-id] options)))
+  (empty? (api-call :delete "gists/comments/%s" [comment-id] options)))

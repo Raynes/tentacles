@@ -1,7 +1,6 @@
 (ns tentacles.events
   "Implements the Github Events API: http://developer.github.com/v3/events/"
-  (:use [tentacles.core :only [api-call]]
-        [slingshot.slingshot :only [try+]]))
+  (:use [tentacles.core :only [api-call]]))
 
 (defn events
   "List public events."
