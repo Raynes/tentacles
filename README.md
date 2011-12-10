@@ -45,6 +45,20 @@ Here are some lovely [Marginalia docs](http://raynes.github.com/tentacles). I al
 
 If you run into something that isn't documented well or you don't understand, look for the API call on the Github API [docs](http://developer.github.com/v3/). If you feel like it, please submit a pull request with improved documentation. Let's make this the most impressive Github API library around!
 
+## Hacking
+
+### Running the tests
+
+In order to run the tests, you need to create a `testinfo.clj` in the root of the checkout with some info required for the tests to run properly. This file is ignored by git, so don't worry about committing auth info. This file should contain a Clojure map like the following:
+
+```clojure
+{:user "" ;; Github username
+ :pass "" ;; Github password
+ :follows ""} ;; Username of a person that this user follows.
+```
+
+As more tests are written this information may grow.
+
 ## License
 
 Copyright (C) 2011 Anthony Grimes
