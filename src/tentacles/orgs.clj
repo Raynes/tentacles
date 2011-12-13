@@ -20,6 +20,11 @@
   [org & [options]]
   (api-call :get "orgs/%s" [org] options))
 
+(defn repos
+  "All repositories in the organization"
+  [org & [options]]
+  (api-call :get "orgs/%s/repos" [org] options))
+
 (defn edit-org
   "Edit an organization.
    Options are:
