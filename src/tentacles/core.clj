@@ -65,7 +65,7 @@
   (let [req (merge
              {:url (str url (apply format end-point positional))
               :basic-auth (query "auth")
-              :throw-exceptions false
+              :throw-exceptions (or (query "throw_exceptions") false)
               :method method}
              (when (query "oauth_token")
                {:headers {"Authorization" (str "token " (query "oauth_token"))}}))]
