@@ -33,7 +33,7 @@
    If 400, 422, 404, 204, or 500, return the original response with the body parsed
    as json. Otherwise, parse and return the body."
   [resp]
-  (if (#{400 204 422 404 500} (:status resp))
+  (if (#{400 401 204 422 404 500} (:status resp))
     (update-in resp [:body] parse-json)
     (parse-json (:body resp))))
 
