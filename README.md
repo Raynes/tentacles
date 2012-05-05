@@ -26,7 +26,7 @@ user> (repos/user-repos "amalloy" {:per-page 1})
 [{:fork false, :pushed_at "2010-12-10T07:37:44Z", :name "ddsolve", :clone_url "https://github.com/amalloy/ddsolve.git", :watchers 1, :updated_at "2011-10-04T02:51:53Z", :html_url "https://github.com/amalloy/ddsolve", :owner {:avatar_url "https://secure.gravatar.com/avatar/1c6d7ce3810fd23f0823bf1df5103cd3?d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-140.png", :url "https://api.github.com/users/amalloy", :login "amalloy", :gravatar_id "1c6d7ce3810fd23f0823bf1df5103cd3", :id 368685}, :language "Clojure", :size 1704, :created_at "2010-08-18T16:37:47Z", :private false, :homepage "", :git_url "git://github.com/amalloy/ddsolve.git", :url "https://api.github.com/repos/amalloy/ddsolve", :master_branch nil, :ssh_url "git@github.com:amalloy/ddsolve.git", :open_issues 0, :id 846605, :forks 1, :svn_url "https://svn.github.com/amalloy/ddsolve", :description "Double-dummy solver for contract bridge"}]
 ```
 
-This time we actually *did* get just one item. We explicitly set the number of items allowed per page to 1. The maximum we can set that to is 100 and the default is 30. We can get specific pages of output the same way by using hte `:page` option.
+This time we actually *did* get just one item. We explicitly set the number of items allowed per page to 1. The maximum we can set that to is 100 and the default is 30. We can get specific pages of output the same way by using hte `:page` option. Additionally, :all-pages true can be passed, which will return a lazy seq of all items on all pages.
 
 This also introduces an idiom in tentacles: options are a map passed to the last parameter of an API function. The options map also contains authentication data when we need it to:
 
@@ -39,7 +39,7 @@ If an API function has no options and authentication would have no uses for that
 
 Authentication information can be basic auth info (username:password) as demonstrated above or it can be an oauth2 access token. In that case, you'd pass the `:oauth-token` key instead.
 
-The Github API is massive and great. I can't demonstrate every API call. Everything is generally just as easy as the above examples, and I'm working hard to document things as well as possible, so go explore! 
+The Github API is massive and great. I can't demonstrate every API call. Everything is generally just as easy as the above examples, and I'm working hard to document things as well as possible, so go explore!
 
 Here are some lovely [Marginalia docs](http://raynes.github.com/tentacles). I also wrote a demonstrational [blog post](http://blog.raynes.me/blog/2011/12/02/waving-our-tentacles/) about Tentacles that I intend to keep updated with future releases.
 
