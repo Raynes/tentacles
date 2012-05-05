@@ -7,8 +7,8 @@
 
 (defn user
   "Get info about a user."
-  [user]
-  (api-call :get "users/%s" [user] nil))
+  [user & [options]]
+  (api-call :get "users/%s" [user] nil options))
 
 (defn me
   "Get info about the currently authenticated user."
