@@ -4,7 +4,9 @@
 ;; that requires no macro-magic.
 (ns tentacles.core
   (:require [clj-http.client :as http]
-            [cheshire.core :as json]))
+            [cheshire.core :as json]
+            [clojure.string :as str]
+            [cemerick.url :as url]))
 
 (def url "https://api.github.com/")
 
@@ -23,6 +25,18 @@
   "Same as json/parse-string but handles nil gracefully."
   [s] (when s (json/parse-string s true)))
 
+(defn parse-link [link]
+  (let [[_ url] (re-find #"<(.*)>" link)
+        [_ rel] (re-find #"rel=\"(.*)\"" link)]
+    [(keyword rel) url]))
+
+(defn parse-links
+  "Takes the content of the link header from a github resp, returns a map of links"
+  [link-body]
+  (->> (str/split link-body #",")
+       (map parse-link)
+       (into {})))
+
 ;; Github returns a zillion and one HTTP status codes. Pretty much all of them
 ;; have JSON bodies, so in the event of something going wrong, we'll return the
 ;; entire request with the `:body` parsed as JSON. Note that 204s will almost never
@@ -33,9 +47,17 @@
    If 400, 422, 404, 204, or 500, return the original response with the body parsed
    as json. Otherwise, parse and return the body."
   [resp]
+
   (if (#{400 204 422 404 500} (:status resp))
     (update-in resp [:body] parse-json)
-    (parse-json (:body resp))))
+    (let [links (parse-links (get-in resp [:headers "link"] ""))]
+      (with-meta (parse-json (:body resp)) {:links links}))))
+
+(defn update-req
+  "Given a clj-http request, and a 'next' url string, merge the next url into the request"
+  [req url]
+  (let [url-map (url/url url)]
+    (assoc-in req [:query-params] (-> url-map :query))))
 
 ;; Github usually throws you 204 responses for 'true' and 404 for 'false'. We want
 ;; to translate to booleans.
@@ -62,19 +84,28 @@
 ;; string like "username:password" or a vector like ["username" "password"].
 ;; Authentication is basic authentication.
 (defn make-request [method end-point positional query]
-  (let [req (merge
+  (let [all-pages? (query "all_pages")
+        req (merge
              {:url (str url (apply format end-point positional))
               :basic-auth (query "auth")
               :throw-exceptions (or (query "throw_exceptions") false)
               :method method}
              (when (query "oauth_token")
-               {:headers {"Authorization" (str "token " (query "oauth_token"))}}))]
-    (safe-parse
-     (http/request
-      (let [proper-query (dissoc query "auth" "oauth_token")]
-        (if (#{:post :put :delete} method)
-          (assoc req :body (json/generate-string (or (proper-query "raw") proper-query)))
-          (assoc req :query-params proper-query)))))))
+               {:headers {"Authorization" (str "token " (query "oauth_token"))}}))
+        proper-query (dissoc query "auth" "oauth_token" "all_pages")
+        req (if (#{:post :put :delete} method)
+              (assoc req :body (json/generate-string (or (proper-query "raw") proper-query)))
+              (assoc req :query-params proper-query))
+        exec-request-one (fn exec-request-one [req]
+                           (safe-parse (http/request req)))
+        exec-request (fn exec-request [req]
+                       (let [resp (exec-request-one req)]
+                         (-> resp meta :links)
+                         (if (and all-pages? (-> resp meta :links :next))
+                           (let [new-req (update-req req (-> resp meta :links :next))]
+                             (lazy-cat resp (exec-request new-req)))
+                           resp)))]
+    (exec-request req)))
 
 ;; Functions will call this to create API calls.
 (defn api-call [method end-point positional query]
