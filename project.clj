@@ -1,8 +1,6 @@
-(defproject tentacles "0.1.3"
+(defproject tentacles "0.1.4"
   :description "A library for working with the Github API."
-  :dependencies [[clojure "1.3.0"]
-                 [clj-http "0.2.5"]
-                 [cheshire "2.0.2"]
-                 [slingshot "0.9.0"]
-                 [com.cemerick/url "0.0.6"]]
-  :dev-dependencies [[midje "1.3.0-RC4"]])
+  :dependencies [[org.clojure/clojure "1.4.0"]
+                 [clj-http "0.4.0"]
+                 [cheshire "4.0.0"]
+                 [com.cemerick/url "0.0.6"]])
