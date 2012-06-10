@@ -29,7 +29,7 @@
   (api-call :get "users/%s/received_events" [user] options))
 
 (defn performed-events
-  "List events perofmred by a user. If you're authenticated, you'll see
+  "List events performed by a user. If you're authenticated, you'll see
    private events, otherwise you'll only see public events."
   [user & [options]]
   (api-call :get "users/%s/events" [user] options))
