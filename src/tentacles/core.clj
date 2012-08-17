@@ -8,7 +8,7 @@
             [clojure.string :as str]
             [cemerick.url :as url]))
 
-(def url "https://api.github.com/")
+(def ^:dynamic url "https://api.github.com/")
 
 ;; The Github API expects json with underscores and such. cheshire can
 ;; turn our keywords into strings, but it doesn't replace hyphens with
@@ -110,3 +110,9 @@
 (defn api-call [method end-point positional query]
   (let [query (query-map query)]
     (make-request method end-point positional query)))
+
+;; Users will call this to point to a different GitHub instance.  This allows
+;; operation against Enterprise GitHub.
+(defmacro with-url [new-url & body]
+ `(binding [url ~new-url]
+    ~@body))
