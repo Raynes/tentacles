@@ -111,6 +111,11 @@
   (let [query (query-map query)]
     (make-request method end-point positional query)))
 
+;; API calls about the API
+(defn rate-limit
+  []
+  (api-call :get "rate_limit" nil nil))
+
 ;; Users will call this to point to a different GitHub instance.  This allows
 ;; operation against Enterprise GitHub.
 (defmacro with-url [new-url & body]
