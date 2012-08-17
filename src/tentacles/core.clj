@@ -110,3 +110,8 @@
 (defn api-call [method end-point positional query]
   (let [query (query-map query)]
     (make-request method end-point positional query)))
+
+;; API calls about the API
+(defn rate-limit
+  []
+  (api-call :get "rate_limit" nil nil))
