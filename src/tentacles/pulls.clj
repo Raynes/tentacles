@@ -1,7 +1,7 @@
 (ns tentacles.pulls
   "Implement the Github Pull Requests API: http://developer.github.com/v3/pulls/"
   (:refer-clojure :exclude [merge])
-  (:use [tentacles.core :only [api-call empty?]]))
+  (:use [tentacles.core :only [api-call no-content?]]))
 
 (defn pulls
   "List pull requests on a repo.
@@ -56,7 +56,7 @@
 (defn merged?
   "Check if a pull request has been merged."
   [user repo id & [options]]
-  (empty? (api-call :get "repos/%s/%s/pulls/%s/merge" [user repo id] options)))
+  (no-content? (api-call :get "repos/%s/%s/pulls/%s/merge" [user repo id] options)))
 
 (defn merge
   "Merge a pull request.
@@ -98,4 +98,4 @@
 (defn delete-comment
   "Delete a comment on a pull request."
   [user repo id options]
-  (empty? (api-call :delete "repos/%s/%s/pulls/comments/%s" [user repo id] options)))
+  (no-content? (api-call :delete "repos/%s/%s/pulls/comments/%s" [user repo id] options)))
