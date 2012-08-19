@@ -4,3 +4,6 @@ pom.xml
 /classes/
 .lein-deps-sum
 testinfo.clj
+.lein*
+target/
+docs/
