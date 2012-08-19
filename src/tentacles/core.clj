@@ -80,13 +80,14 @@
                            resp)))]
     (exec-request req)))
 
-(defn api-call [method end-point positional query]
-  (let [query (query-map query)]
-    (make-request method end-point positional query)))
+(defn api-call
+  ([method end-point] (api-call method end-point nil nil))
+  ([method end-point positional] (api-call method end-point positional nil))
+  ([method end-point positional query]
+   (let [query (query-map query)]
+     (make-request method end-point positional query))))
 
-(defn rate-limit
-  []
-  (api-call :get "rate_limit" nil nil))
+(defn rate-limit [] (api-call :get "rate_limit"))
 
 (defmacro with-url [new-url & body]
  `(binding [url ~new-url]
