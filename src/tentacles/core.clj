@@ -54,7 +54,7 @@
   "Creates a URL out of end-point and positional. Called URLEncoder/encode on
    the elements of positional and then formats them in."
   [end-point positional]
-  (str url (apply format end-point (map #(URLEncoder/encode % "UTF-8") positional))))
+  (str url (apply format end-point (map #(URLEncoder/encode (str %) "UTF-8") positional))))
 
 (defn make-request [method end-point positional query]
   (let [all-pages? (query "all_pages")
