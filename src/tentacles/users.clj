@@ -3,12 +3,10 @@
   (:refer-clojure :exclude [keys])
   (:use [tentacles.core :only [api-call no-content?]]))
 
-;; ## Primary API
-
 (defn user
   "Get info about a user."
   [user & [options]]
-  (api-call :get "users/%s" [user] nil options))
+  (api-call :get "users/%s" [user] options))
 
 (defn me
   "Get info about the currently authenticated user."
@@ -27,8 +25,6 @@
   [options]
   (api-call :post "user" nil options))
 
-;; User Email API
-
 (defn emails
   "List the authenticated user's emails."
   [options]
@@ -45,8 +41,6 @@
    a string or a sequence of email addresses."
   [emails options]
   (no-content? (api-call :delete "user/emails" nil (assoc options :raw emails))))
-
-;; User Followers API
 
 (defn followers
   "List a user's followers."
@@ -82,8 +76,6 @@
   "Unfollow a user."
   [user options]
   (no-content? (api-call :delete "user/following/%s" [user] options)))
-
-;; User Keys API
 
 (defn keys
   "List the authenticated user's public keys."
