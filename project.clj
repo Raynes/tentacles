@@ -1,5 +1,8 @@
 (defproject tentacles "0.2.2"
   :description "A library for working with the Github API."
+  :url "https://github.com/Raynes/tentacles"
+  :license {:name "Eclipse Public License"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [clj-http "0.4.0"]
                  [cheshire "4.0.0"]
