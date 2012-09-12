@@ -311,6 +311,33 @@
   [user repo options]
   (no-content? (api-call :delete "user/watched/%s/%s" [user repo] options)))
 
+;; ## Repo Stargazers
+
+(defn stargazers
+  "List a repository's stargazers."
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/stargazers" [user repo] options))
+
+(defn starring
+  "List all the repositories that a user is starring."
+  [user & [options]]
+  (api-call :get "users/%s/starred" [user] options))
+
+(defn starring?
+  "Check if you are watching a repository."
+  [user repo options]
+  (no-content? (api-call :get "user/starred/%s/%s" [user repo] options)))
+
+(defn star
+  "Star a repository."
+  [user repo options]
+  (no-content? (api-call :put "user/starred/%s/%s" [user repo] options)))
+
+(defn unstar
+  "Unstar a repository"
+  [user repo options]
+  (no-content? (api-call :delete "user/starred/%s/%s" [user repo] options)))
+
 ;; ## Repo Hooks API
 
 (defn hooks
