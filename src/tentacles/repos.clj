@@ -403,3 +403,15 @@
             "hub.callback" callback}
            (when-let [secret (:secret options)]
              {"hub.secret" secret}))})))
+
+;; ## Repo Contents API
+
+(defn readme
+  "Get the preferred README for a repository."
+  [user repo options]
+  (api-call :get "repos/%s/%s/readme" [user repo] options))
+
+(defn contents
+  "Get the contents of any file or directory in a repository."
+  [user repo path options]
+  (api-call :get "repos/%s/%s/contents/%s" [user repo path] options))
