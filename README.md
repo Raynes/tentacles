@@ -37,7 +37,7 @@ user> (repos/repos {:auth "Raynes:REDACTED" :per-page 1})
 
 If an API function has no options and authentication would have no uses for that particular call, the options map is not a parameter at all. For API calls that can do different things based on whether or not you are authenticated but authentication is not **required**, then the options map will be an optional argument. For API calls that require authentication to function at all, the options map is a required argument. Any data that is required by an API call is a positional argument to the API functions. The options map only ever contains authentication info and/or optional input.
 
-Authentication information can be basic auth info (username:password) as demonstrated above or it can be an oauth2 access token. In that case, you'd pass the `:oauth-token` key instead.
+Authentication is supported by Github user authentication `:auth <username:password>` as demonstrated above, or by oauth or oauth2.  For oauth add `:oauth-token <token>` to the options map.  Likewise, for oauth2, include `:client-id <client_id> :client-token <client_token>` in the options map.
 
 The Github API is massive and great. I can't demonstrate every API call. Everything is generally just as easy as the above examples, and I'm working hard to document things as well as possible, so go explore!
 
