@@ -6,12 +6,13 @@
   (:import java.net.URLEncoder))
 
 (def ^:dynamic url "https://api.github.com/")
+(def ^:dynamic defaults {})
 
 (defn query-map
-  "Turn keywords into strings and replace hyphens with underscores."
+  "Merge defaults, turn keywords into strings, and replace hyphens with underscores."
   [entries]
   (into {}
-        (for [[k v] entries]
+        (for [[k v] (concat defaults entries)]
           [(.replace (name k) "-" "_") v])))
 
 (defn parse-json
@@ -95,4 +96,8 @@
 
 (defmacro with-url [new-url & body]
  `(binding [url ~new-url]
+    ~@body))
+
+(defmacro with-defaults [options & body]
+ `(binding [defaults ~options]
     ~@body))

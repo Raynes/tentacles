@@ -10,7 +10,7 @@
 
 (defn me
   "Get info about the currently authenticated user."
-  [options]
+  [& [options]]
   (api-call :get "user" nil options))
 
 (defn edit-user
