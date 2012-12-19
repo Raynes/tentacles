@@ -33,12 +33,15 @@
 (defn safe-parse
   "Takes a response and checks for certain status codes. If 204, return nil.
    If 400, 422, 404, 204, or 500, return the original response with the body parsed
-   as json. Otherwise, parse and return the body."
+   as json. Otherwise, parse and return the body if json, or return the body if raw."
   [resp]
   (if (#{400 401 204 422 404 500} (:status resp))
     (update-in resp [:body] parse-json)
-    (let [links (parse-links (get-in resp [:headers "link"] ""))]
-      (with-meta (parse-json (:body resp)) {:links links}))))
+    (let [links (parse-links (get-in resp [:headers "link"] ""))
+          content-type (get-in resp [:headers "content-type"])]
+      (if-not (.contains content-type "raw")
+        (with-meta (parse-json (:body resp)) {:links links})
+        (resp :body)))))
 
 (defn update-req
   "Given a clj-http request, and a 'next' url string, merge the next url into the request"
@@ -58,14 +61,16 @@
 
 (defn make-request [method end-point positional query]
   (let [all-pages? (query "all_pages")
-        req (merge
-             {:url (format-url end-point positional)
-              :basic-auth (query "auth")
-              :throw-exceptions (or (query "throw_exceptions") false)
-              :method method}
-             (when (query "oauth_token")
-               {:headers {"Authorization" (str "token " (query "oauth_token"))}}))
-        proper-query (dissoc query "auth" "oauth_token" "all_pages")
+        req (merge-with merge
+                        {:url (format-url end-point positional)
+                         :basic-auth (query "auth")
+                         :throw-exceptions (or (query "throw_exceptions") false)
+                         :method method}
+                        (when (query "accept")
+                          {:headers {"Accept" (query "accept")}})
+                        (when (query "oauth_token")
+                          {:headers {"Authorization" (str "token " (query "oauth_token"))}}))
+        proper-query (dissoc query "auth" "oauth_token" "all_pages" "accept")
         req (if (#{:post :put :delete} method)
               (assoc req :body (json/generate-string (or (proper-query "raw") proper-query)))
               (assoc req :query-params proper-query))
@@ -73,7 +78,6 @@
                            (safe-parse (http/request req)))
         exec-request (fn exec-request [req]
                        (let [resp (exec-request-one req)]
-                         (-> resp meta :links)
                          (if (and all-pages? (-> resp meta :links :next))
                            (let [new-req (update-req req (-> resp meta :links :next))]
                              (lazy-cat resp (exec-request new-req)))
