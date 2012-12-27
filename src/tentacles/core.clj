@@ -31,17 +31,21 @@
        (map parse-link)
        (into {})))
 
+(defn merge-rate-limit [m h]
+  "Merges RateLimit values from headers into Json response"
+  (merge m (select-keys h [:X-RateLimit-Limit :X-RateLimit-Remaining])))
+
 (defn safe-parse
   "Takes a response and checks for certain status codes. If 204, return nil.
-   If 400, 422, 404, 204, or 500, return the original response with the body parsed
+   If 400, 401, 204, 422, 403, 404 or 500, return the original response with the body parsed
    as json. Otherwise, parse and return the body if json, or return the body if raw."
   [resp]
-  (if (#{400 401 204 422 404 500} (:status resp))
+  (if (#{400 401 204 422 403 404 500} (:status resp))
     (update-in resp [:body] parse-json)
     (let [links (parse-links (get-in resp [:headers "link"] ""))
           content-type (get-in resp [:headers "content-type"])]
       (if-not (.contains content-type "raw")
-        (with-meta (parse-json (:body resp)) {:links links})
+        (with-meta (merge-rate-limit (parse-json (:body resp)) (:headers resp)) {:links links})
         (resp :body)))))
 
 (defn update-req
