@@ -65,11 +65,12 @@
   (str url (apply format end-point (map #(URLEncoder/encode (str %) "UTF-8") positional))))
 
 (defn make-request [method end-point positional query]
-  (let [all-pages? (query "all_pages")
-        req (merge-with merge
+  (let [req (merge-with merge
                         {:url (format-url end-point positional)
                          :basic-auth (query "auth")
                          :throw-exceptions (or (query "throw_exceptions") false)
+                         :follow-redirects (let [over (get query "follow_redirects" ::not-found)]
+                                             (if (= over ::not-found) true over))
                          :method method}
                         (when (query "accept")
                           {:headers {"Accept" (query "accept")}})
@@ -78,23 +79,34 @@
         proper-query (dissoc query "auth" "oauth_token" "all_pages" "accept")
         req (if (#{:post :put :delete} method)
               (assoc req :body (json/generate-string (or (proper-query "raw") proper-query)))
-              (assoc req :query-params proper-query))
-        exec-request-one (fn exec-request-one [req]
-                           (safe-parse (http/request req)))
-        exec-request (fn exec-request [req]
-                       (let [resp (exec-request-one req)]
-                         (if (and all-pages? (-> resp meta :links :next))
-                           (let [new-req (update-req req (-> resp meta :links :next))]
-                             (lazy-cat resp (exec-request new-req)))
-                           resp)))]
-    (exec-request req)))
+              (assoc req :query-params proper-query))]
+    req))
 
 (defn api-call
   ([method end-point] (api-call method end-point nil nil))
   ([method end-point positional] (api-call method end-point positional nil))
   ([method end-point positional query]
-   (let [query (query-map query)]
-     (make-request method end-point positional query))))
+     (let [query (query-map query)
+           all-pages? (query "all_pages")
+           req (make-request method end-point positional query)
+           exec-request-one (fn exec-request-one [req]
+                              (safe-parse (http/request req)))
+           exec-request (fn exec-request [req]
+                          (let [resp (exec-request-one req)]
+                            (if (and all-pages? (-> resp meta :links :next))
+                              (let [new-req (update-req req (-> resp meta :links :next))]
+                                (lazy-cat resp (exec-request new-req)))
+                              resp)))]
+       (exec-request req))))
+
+(defn raw-api-call
+  ([method end-point] (raw-api-call method end-point nil nil))
+  ([method end-point positional] (raw-api-call method end-point positional nil))
+  ([method end-point positional query]
+     (let [query (query-map query)
+           all-pages? (query "all_pages")
+           req (make-request method end-point positional query)]
+       (http/request req))))
 
 (defn rate-limit [] (api-call :get "rate_limit"))
 
