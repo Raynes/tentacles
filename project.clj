@@ -6,4 +6,5 @@
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [clj-http "0.4.0"]
                  [cheshire "4.0.0"]
-                 [com.cemerick/url "0.0.6"]])
+                 [com.cemerick/url "0.0.6"]
+                 [org.clojure/data.codec "0.1.0"]])
