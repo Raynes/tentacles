@@ -1,9 +1,10 @@
 (ns tentacles.repos
   "Implements the Github Repos API: http://developer.github.com/v3/repos/"
   (:refer-clojure :exclude [keys])
+  (:require [clojure.data.codec.base64 :as b64])
   (:use [clj-http.client :only [post put]]
         [clojure.java.io :only [file]]
-        [tentacles.core :only [api-call no-content?]]
+        [tentacles.core :only [api-call no-content? raw-api-call]]
         [cheshire.core :only [generate-string]]))
 
 ;; ## Primary Repos API
@@ -403,3 +404,53 @@
             "hub.callback" callback}
            (when-let [secret (:secret options)]
              {"hub.secret" secret}))})))
+
+;; ## Repo Contents API
+
+(defn- decode-b64
+  "Decodes a base64 encoded string in a response"
+  ([res str? path]
+     (if (and (map? res) (= (:encoding res) "base64"))
+       (if-let [^String encoded (get-in res path)]
+         (let [trimmed (.replace encoded "\n" "")
+               raw (.getBytes trimmed "UTF-8")
+               decoded (b64/decode raw)
+               done (if str? (String. decoded "UTF-8") decoded)]
+           (assoc-in res path done))
+         res)
+       res))
+  ([res str?] (decode-b64 res str? [:content]))
+  ([res] (decode-b64 res false [:content])))
+
+(defn readme
+  "Get the preferred README for a repository.
+   Options are:
+      ref  -- The name of the Commit/Branch/Tag. Defaults to master.
+      str? -- Whether the content should be decoded to String. Defaults to true."
+  [user repo {:keys [str?] :or {str? true} :as options}]
+  (decode-b64
+   (api-call :get "repos/%s/%s/readme" [user repo] (dissoc options :str?))
+   str?))
+
+(defn contents
+  "Get the contents of any file or directory in a repository.
+   Options are:
+      ref  -- The name of the Commit/Branch/Tag. Defaults to master.
+      str? -- Whether the content should be decoded to a String. Defaults to false (ByteArray)."
+  [user repo path {:keys [str?] :as options}]
+  (decode-b64
+   (api-call :get "repos/%s/%s/contents/%s" [user repo path] (dissoc options :str?))
+   str?))
+
+(defn archive-link
+  "Get a URL to download a tarball or zipball archive for a repository.
+   Options are:
+      ref -- The name of the Commit/Branch/Tag. Defaults to master."
+  ([user repo archive-format {git-ref :ref :or {git-ref ""} :as options}]
+     (let [proper-options (-> options
+                              (assoc :follow-redirects false)
+                              (dissoc :ref))
+           resp (raw-api-call :get "repos/%s/%s/%s/%s" [user repo archive-format git-ref] proper-options)]
+       (if (= (resp :status) 302)
+         (get-in resp [:headers "location"])
+         resp))))
