@@ -33,10 +33,14 @@
 
 (defn extract-useful-meta
   [h]
-  (let [{:strs [^String etag last-modified x-ratelimit-limit x-ratelimit-remaining]} h]
+  (let [{:strs [etag last-modified x-ratelimit-limit x-ratelimit-remaining]} h]
     {:etag etag :last-modified last-modified
-     :call-limit (Long/parseLong x-ratelimit-limit)
-     :call-remaining (Long/parseLong x-ratelimit-remaining)}))
+     :call-limit (when x-ratelimit-limit (Long/parseLong x-ratelimit-limit))
+     :call-remaining (when x-ratelimit-remaining (Long/parseLong x-ratelimit-remaining))}))
+
+(defn api-meta
+  [obj]
+  (:api-meta (meta obj)))
 
 (defn safe-parse
   "Takes a response and checks for certain status codes. If 204, return nil.
@@ -54,9 +58,9 @@
            (if-not (.contains content-type "raw")
              (let [parsed (parse-json body)]
                (if (map? parsed)
-                 (with-meta parsed (merge metadata {:links links}))
+                 (with-meta parsed {:links links :api-meta metadata})
                  (with-meta (map #(with-meta % metadata) parsed)
-                   (merge metadata {:links links}))))
+                   {:links links :api-meta metadata})))
              body))))
 
 (defn update-req
