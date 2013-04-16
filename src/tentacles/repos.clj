@@ -9,6 +9,13 @@
 
 ;; ## Primary Repos API
 
+(defn all-repos
+  "Lists all of the repositories, in the order they were created.
+   Options are:
+      since -- integer ID of the last repository seen."
+  [& [options]]
+  (api-call :get "repositories" nil options))
+
 (defn repos
   "List the authenticated user's repositories.
    Options are:
