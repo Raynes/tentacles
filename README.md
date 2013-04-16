@@ -41,6 +41,20 @@ If an API function has no options and authentication would have no uses for that
 
 Authentication is supported by Github user authentication `:auth <username:password>` as demonstrated above, or by oauth or oauth2.  For oauth add `:oauth-token <token>` to the options map.  Likewise, for oauth2, include `:client-id <client_id> :client-token <client_token>` in the options map.
 
+You can access useful information returned by the API such as current
+rate limits, etags, etc. by checking the response with `core/api-meta`. You can then use this to perform conditional requests against the API. If the data has not changed, the keyword `:tentacles.core/not-modified` will be returned. This does not consume any API call quota.
+
+```clojure
+user> (core/api-meta (repos/readme "Raynes" "tentacles" {}))
+{:links {nil nil}, :etag "\"f1f3cfabbf0f98e0bbaa7aa424f92e75\"", :last-modified "Mon, 28 Jan 2013 21:13:48 GMT", :call-limit 60, :call-remaining 59}
+
+user> (repos/readme "Raynes" "tentacles" {:etag "\"f1f3cfabbf0f98e0bbaa7aa424f92e75\""})
+:tentacles.core/not-modified
+
+user> (repos/readme "Raynes" "tentacles" {:if-modified-since "Mon, 28 Jan 2013 21:13:48 GMT"})
+:tentacles.core/not-modified
+```
+
 The Github API is massive and great. I can't demonstrate every API call. Everything is generally just as easy as the above examples, and I'm working hard to document things as well as possible, so go explore!
 
 Here are some lovely [Marginalia docs](http://raynes.github.com/tentacles). I also wrote a demonstrational [blog post](http://blog.raynes.me/blog/2011/12/02/waving-our-tentacles/) about Tentacles that I intend to keep updated with future releases.

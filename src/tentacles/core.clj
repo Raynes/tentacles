@@ -31,22 +31,37 @@
        (map parse-link)
        (into {})))
 
-(defn merge-rate-limit [m h]
-  "Merges RateLimit values from headers into Json response"
-  (merge m (select-keys h [:X-RateLimit-Limit :X-RateLimit-Remaining])))
+(defn extract-useful-meta
+  [h]
+  (let [{:strs [etag last-modified x-ratelimit-limit x-ratelimit-remaining]} h]
+    {:etag etag :last-modified last-modified
+     :call-limit (when x-ratelimit-limit (Long/parseLong x-ratelimit-limit))
+     :call-remaining (when x-ratelimit-remaining (Long/parseLong x-ratelimit-remaining))}))
+
+(defn api-meta
+  [obj]
+  (:api-meta (meta obj)))
 
 (defn safe-parse
   "Takes a response and checks for certain status codes. If 204, return nil.
    If 400, 401, 204, 422, 403, 404 or 500, return the original response with the body parsed
    as json. Otherwise, parse and return the body if json, or return the body if raw."
-  [resp]
-  (if (#{400 401 204 422 403 404 500} (:status resp))
-    (update-in resp [:body] parse-json)
-    (let [links (parse-links (get-in resp [:headers "link"] ""))
-          content-type (get-in resp [:headers "content-type"])]
-      (if-not (.contains content-type "raw")
-        (with-meta (merge-rate-limit (parse-json (:body resp)) (:headers resp)) {:links links})
-        (resp :body)))))
+  [{:keys [headers status body] :as resp}]
+  (cond
+   (= 304 status)
+   ::not-modified
+   (#{400 401 204 422 403 404 500} status)
+   (update-in resp [:body] parse-json)
+   :else (let [links (parse-links (get headers "link" ""))
+               content-type (get headers "content-type")
+               metadata (extract-useful-meta headers)]
+           (if-not (.contains content-type "raw")
+             (let [parsed (parse-json body)]
+               (if (map? parsed)
+                 (with-meta parsed {:links links :api-meta metadata})
+                 (with-meta (map #(with-meta % metadata) parsed)
+                   {:links links :api-meta metadata})))
+             body))))
 
 (defn update-req
   "Given a clj-http request, and a 'next' url string, merge the next url into the request"
@@ -64,18 +79,25 @@
   [end-point positional]
   (str url (apply format end-point (map #(URLEncoder/encode (str %) "UTF-8") positional))))
 
-(defn make-request [method end-point positional query]
+(defn make-request [method end-point positional
+                    {:strs [auth throw_exceptions follow_redirects
+                            accept oauth_token etag if_modified_since]
+                     :or {follow_redirects true throw_exceptions false}
+                     :as query}]
   (let [req (merge-with merge
                         {:url (format-url end-point positional)
-                         :basic-auth (query "auth")
-                         :throw-exceptions (or (query "throw_exceptions") false)
-                         :follow-redirects (let [over (get query "follow_redirects" ::not-found)]
-                                             (if (= over ::not-found) true over))
+                         :basic-auth auth
+                         :throw-exceptions throw_exceptions
+                         :follow-redirects follow_redirects
                          :method method}
-                        (when (query "accept")
-                          {:headers {"Accept" (query "accept")}})
-                        (when (query "oauth_token")
-                          {:headers {"Authorization" (str "token " (query "oauth_token"))}}))
+                        (when accept
+                          {:headers {"Accept" accept}})
+                        (when oauth_token
+                          {:headers {"Authorization" (str "token " oauth_token)}})
+                        (when etag
+                          {:headers {"if-None-Match" etag}})
+                        (when if_modified_since
+                          {:headers {"if-Modified-Since" if_modified_since}}))
         proper-query (dissoc query "auth" "oauth_token" "all_pages" "accept")
         req (if (#{:post :put :delete} method)
               (assoc req :body (json/generate-string (or (proper-query "raw") proper-query)))
