@@ -5,7 +5,6 @@
 (def gist {:files {:file1 {:filename "file1" :content "content1" :type "text/plain"} :file2 {:filename "file2" :content "content2"}}})
 
 (deftest files-are-parsed
-  (let [files (gists/map-file gist)]
+  (let [files (gists/file-contents gist)]
     (is (= (count files) 2))
-    (is (= (get-in files [:file1 :content]) "content1"))
-    (is (not (contains? (first files) :filename)))))
+    (is (= (get-in files [:file1]) "content1"))))
