@@ -43,6 +43,12 @@
   (assoc options
     :files (into {} (for [[k v] files] [k {:content v}]))))
 
+(defn map-file
+  "Gist files as a human friendly map"
+  [gist]
+  (if-let [files (:files gist)]
+    (zipmap (keys files) (map #(dissoc (second %) :filename) files))))
+
 (defn create-gist
   "Create a gist. files is a map of filenames to contents.
    Options are:
