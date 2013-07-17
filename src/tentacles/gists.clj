@@ -47,7 +47,7 @@
   "Extract a file->content map from a gist"
   [gist]
   (if-let [files (:files gist)]
-    (zipmap (keys files) (map #(:content (second %)) files))))
+    (zipmap (keys files) (map (comp :content second) files))))
 
 (defn create-gist
   "Create a gist. files is a map of filenames to contents.

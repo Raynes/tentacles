@@ -7,4 +7,4 @@
 (deftest files-are-parsed
   (let [files (gists/file-contents gist)]
     (is (= (count files) 2))
-    (is (= (get-in files [:file1]) "content1"))))
+    (is (= (:file1 files) "content1"))))
