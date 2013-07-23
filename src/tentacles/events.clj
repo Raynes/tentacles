@@ -4,8 +4,8 @@
 
 (defn events
   "List public events."
-  []
-  (api-call :get "events" nil nil))
+  [& [options]]
+  (api-call :get "events" nil options))
 
 (defn repo-events
   "List repository events."
