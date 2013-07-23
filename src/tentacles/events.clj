@@ -1,5 +1,5 @@
 (ns tentacles.events
-  "Implements the Github Events API: http://developer.github.com/v3/events/"
+  "Implements the Github Events API: http://developer.github.com/v3/activity/events/"
   (:use [tentacles.core :only [api-call]]))
 
 (defn events
