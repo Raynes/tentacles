@@ -402,15 +402,18 @@
   [user repo mode event callback & [options]]
   (no-content?
    (post "https://api.github.com/hub"
-         {:basic-auth (:auth options)
-          :form-params
-          (merge
-           {"hub.mode" mode
-            "hub.topic" (format "https://github.com/%s/%s/events/%s"
-                                user repo event)
-            "hub.callback" callback}
-           (when-let [secret (:secret options)]
-             {"hub.secret" secret}))})))
+         (merge 
+           (when-let [oauth-token (:oauth-token options)]
+             {:headers {"Authorization" (str "token " oauth-token)}})
+           {:basic-auth (:auth options)
+            :form-params
+            (merge
+             {"hub.mode" mode
+              "hub.topic" (format "https://github.com/%s/%s/events/%s"
+                                  user repo event)
+              "hub.callback" callback}
+             (when-let [secret (:secret options)]
+               {"hub.secret" secret}))}))))
 
 ;; ## Repo Contents API
 
