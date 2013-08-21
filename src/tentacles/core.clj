@@ -121,7 +121,7 @@
                             (if (and all-pages? (-> resp meta :links :next))
                               (let [new-req (update-req req (-> resp meta :links :next))]
                                 (with-meta (lazy-cat resp (exec-request new-req))
-                                  (meta resp)))
+                                           (meta resp)))
                               resp)))]
        (exec-request req))))
 
