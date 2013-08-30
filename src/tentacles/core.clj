@@ -133,7 +133,9 @@
            req (make-request method end-point positional query)]
        (http/request req))))
 
-(defn rate-limit [] (api-call :get "rate_limit"))
+(defn rate-limit 
+  ([] (api-call :get "rate_limit"))
+  ([opts] (api-call :get "rate_limit" nil opts)))
 
 (defmacro with-url [new-url & body]
  `(binding [url ~new-url]
