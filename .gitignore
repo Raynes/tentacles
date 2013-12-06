@@ -7,3 +7,4 @@ testinfo.clj
 .lein*
 target/
 docs/
+.nrepl-port
