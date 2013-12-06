@@ -136,6 +136,7 @@
 (defn environ-auth
   "Lookup :gh-username and :gh-password in environ (~/.lein/profiles.clj or .lein-env) and return a string auth.
    Usage: (users/me {:auth (environ-auth)})"
+  [env]
   (str (:gh-username env ) ":" (:gh-password env)))
 
 (defn rate-limit
