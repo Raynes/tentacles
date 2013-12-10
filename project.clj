@@ -8,8 +8,4 @@
                  [cheshire "4.0.0"]
                  [com.cemerick/url "0.0.6"]
                  [org.clojure/data.codec "0.1.0"]
-                 [environ "0.4.0"]]
-  :profiles
-  {:dev
-   {:global-vars {*warn-on-reflection* true}
-    :aot :all}})
+                 [environ "0.4.0"]])
