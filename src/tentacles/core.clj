@@ -83,8 +83,8 @@
   (str url (apply format end-point (map #(URLEncoder/encode (str %) "UTF-8") positional))))
 
 (defn make-request [method end-point positional
-                    {:strs [auth throw_exceptions follow_redirects
-                            accept oauth_token etag if_modified_since]
+                    {:strs [auth throw_exceptions follow_redirects accept
+                            oauth_token etag if_modified_since user_agent]
                      :or {follow_redirects true throw_exceptions false}
                      :as query}]
   (let [req (merge-with merge
@@ -99,9 +99,11 @@
                           {:headers {"Authorization" (str "token " oauth_token)}})
                         (when etag
                           {:headers {"if-None-Match" etag}})
+                        (when user_agent
+                          {:headers {"User-Agent" user_agent}})
                         (when if_modified_since
                           {:headers {"if-Modified-Since" if_modified_since}}))
-        proper-query (dissoc query "auth" "oauth_token" "all_pages" "accept")
+        proper-query (dissoc query "auth" "oauth_token" "all_pages" "accept" "user_agent")
         req (if (#{:post :put :delete} method)
               (assoc req :body (json/generate-string (or (proper-query "raw") proper-query)))
               (assoc req :query-params proper-query))]

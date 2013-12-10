@@ -55,6 +55,12 @@ user> (repos/readme "Raynes" "tentacles" {:if-modified-since "Mon, 28 Jan 2013 2
 :tentacles.core/not-modified
 ```
 
+Similarly, you can set an User-Agent to make your requests more friendly and identifiable.
+
+```clojure
+user> (repos/readme "Raynes" "tentacles" {:user-agent "MyPhoneApp"})
+```
+
 The Github API is massive and great. I can't demonstrate every API call. Everything is generally just as easy as the above examples, and I'm working hard to document things as well as possible, so go explore!
 
 Here are some lovely [Marginalia docs](http://raynes.github.com/tentacles). I also wrote a demonstrational [blog post](http://blog.raynes.me/blog/2011/12/02/waving-our-tentacles/) about Tentacles that I intend to keep updated with future releases.
