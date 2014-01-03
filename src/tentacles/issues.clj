@@ -50,6 +50,22 @@
   [user repo & [options]]
   (api-call :get "repos/%s/%s/issues" [user repo] (join-labels options)))
 
+(defn org-issues
+  "List all issues for a given organization for (authenticated) user.
+   Options are:
+     filter    -- assigned: assigned to you,
+                  created: created by you,
+                  mentioned: issues that mention you,
+                  subscribed: issues that you're subscribed to.
+     state     -- open (default), closed.
+     labels    -- A string of comma-separated label names.
+     sort      -- created (default), updated, comments.
+     direction -- asc: ascending,
+                  desc (default): descending.
+     since     -- String ISO 8601 timestamp."
+  [org & [options]]
+  (api-call :get "orgs/%s/issues" [org] (join-labels options)))
+
 (defn specific-issue
   "Fetch a specific issue."
   [user repo number & [options]]
