@@ -3,6 +3,11 @@
   (:refer-clojure :exclude [keys])
   (:use [tentacles.core :only [api-call no-content?]]))
 
+(defn users
+  "Get info about all users."
+  [& [options]]
+  (api-call :get "users" nil options))
+
 (defn user
   "Get info about a user."
   [user & [options]]
