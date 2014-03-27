@@ -82,6 +82,11 @@
   [user options]
   (no-content? (api-call :delete "user/following/%s" [user] options)))
 
+(defn user-keys
+  "List the user's public keys."
+  [user & [options]]
+  (api-call :get "users/%s/keys" [user] options))
+
 (defn keys
   "List the authenticated user's public keys."
   [options]
