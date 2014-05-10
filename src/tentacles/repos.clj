@@ -464,3 +464,72 @@
        (if (= (resp :status) 302)
          (get-in resp [:headers "location"])
          resp))))
+
+;; ## Status API
+(def combined-state-opt-in "application/vnd.github.she-hulk-preview+json")
+
+(defn statuses
+  "Returns the combined status of a ref.
+
+Include :combined? false in options to disable combined status (see https://developer.github.com/v3/repos/statuses/#get-the-combined-status-for-a-specific-ref)"
+  [user repo ref & [options]]
+  {:pre [user repo ref]}
+  (api-call :get "repos/%s/%s/commits/%s/status" [user repo ref]
+            (cond->
+             options
+
+             (:combined? options true)
+             (assoc 
+               :accept combined-state-opt-in))))
+
+(defn create-status
+  "Creates a status.
+
+Options are: state target-url description context; state is mandatory"
+  [user repo ref options]
+  {:pre [user repo ref
+         (#{"pending" "success" "error" "failure"} (name (:state options)))]}
+  (api-call :post "repos/%s/%s/statuses/%s" [user repo ref]
+            (assoc options
+              :accept combined-state-opt-in)))
+
+;; ## Deployments API
+(def deployments-opt-in "application/vnd.github.cannonball-preview+json")
+
+(defn deployments
+  "Returns deployments for a repo"
+  [user repo & [options]]
+  {:pre [user repo]}
+  (api-call :get "repos/%s/%s/deployments" [user repo]
+            (assoc options
+              :accept deployments-opt-in)))
+
+(defn create-deployment
+  "Creates a deployment for a ref.
+
+options can containt keys: :force :payload :auto-merge :description"
+  [user repo ref options]
+  {:pre [user repo ref]}
+  (api-call :post "repos/%s/%s/deployments" [user repo]
+            (assoc options
+              :ref ref
+              :accept deployments-opt-in)))
+
+(defn deployment-statuses
+  "Returns deployment statuses for a deployment"
+  [user repo deployment options]
+  {:pre [user repo deployment]}
+  (api-call :get "repos/%s/%s/deployments/%s/statuses" [user repo deployment]
+            (assoc options
+              :accept deployments-opt-in)))
+
+(defn create-deployment-status
+  "Create a deployment status.
+
+Options are: state (required), target-url, description"
+  [user repo deployment options]
+  {:pre [user repo deployment
+         (#{"pending" "success" "error" "failure"} (name (:state options)))]}
+  (api-call :post "repos/%s/%s/deployments/%s/statuses" [user repo deployment]
+            (assoc options
+              :accept deployments-opt-in)))
