@@ -469,27 +469,32 @@
 (def combined-state-opt-in "application/vnd.github.she-hulk-preview+json")
 
 (defn statuses
-  "Returns the combined status of a ref.
+  "Returns the combined status of a ref (SHA, branch, or tag).
 
-Include :combined? false in options to disable combined status (see https://developer.github.com/v3/repos/statuses/#get-the-combined-status-for-a-specific-ref)"
+By default, returns the combined status. Include `:combined? false' in options to disable combined status (see https://developer.github.com/v3/repos/statuses/#get-the-combined-status-for-a-specific-ref)"
   [user repo ref & [options]]
   {:pre [user repo ref]}
-  (api-call :get "repos/%s/%s/commits/%s/status" [user repo ref]
-            (cond->
-             options
+  (let [combined? (:combined? options true)]
+    (api-call :get
+              (if combined?
+                "repos/%s/%s/commits/%s/status"
+                "repos/%s/%s/statuses/%s")
+              [user repo ref]
+              (cond->
+               options
 
-             (:combined? options true)
-             (assoc 
-               :accept combined-state-opt-in))))
+               combined?
+               (assoc 
+                   :accept combined-state-opt-in)))))
 
 (defn create-status
   "Creates a status.
 
 Options are: state target-url description context; state is mandatory"
-  [user repo ref options]
-  {:pre [user repo ref
+  [user repo sha options]
+  {:pre [user repo sha
          (#{"pending" "success" "error" "failure"} (name (:state options)))]}
-  (api-call :post "repos/%s/%s/statuses/%s" [user repo ref]
+  (api-call :post "repos/%s/%s/statuses/%s" [user repo sha]
             (assoc options
               :accept combined-state-opt-in)))
 
@@ -507,7 +512,7 @@ Options are: state target-url description context; state is mandatory"
 (defn create-deployment
   "Creates a deployment for a ref.
 
-options can containt keys: :force :payload :auto-merge :description"
+Options are: force, payload, auto-merge, description"
   [user repo ref options]
   {:pre [user repo ref]}
   (api-call :post "repos/%s/%s/deployments" [user repo]
