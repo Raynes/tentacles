@@ -6,7 +6,7 @@ This library is the successor to my old [clj-github](https://github.com/Raynes/c
 
 ## Usage
 
-This is on clojars, of course. Just add `[tentacles "0.2.5"]` to your `:dependencies` in your project.clj file.
+This is on clojars, of course. Just add `[tentacles "0.2.6"]` to your `:dependencies` in your project.clj file.
 
 ### CODE!
 
