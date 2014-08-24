@@ -45,8 +45,7 @@
   (api-call :post "repos/%s/%s/git/commits" [user repo]
             (assoc options
               :message message
-              :tree tree
-              :parents parents)))
+              :tree tree)))
 
 ;; ## References
 
