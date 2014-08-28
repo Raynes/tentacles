@@ -39,7 +39,7 @@ Default options can be specified via `with-defaults`.
 
 If an API function has no options and authentication would have no uses for that particular call, the options map is not a parameter at all. For API calls that can do different things based on whether or not you are authenticated but authentication is not **required**, then the options map will be an optional argument. For API calls that require authentication to function at all, the options map is a required argument. Any data that is required by an API call is a positional argument to the API functions. The options map only ever contains authentication info and/or optional input.
 
-Authentication is supported by Github user authentication `:auth <username:password>` as demonstrated above, or by oauth or oauth2.  For oauth add `:oauth-token <token>` to the options map.  Likewise, for oauth2, include `:client-id <client_id> :client-token <client_token>` in the options map.
+Authentication is supported by Github user authentication `:auth <username:password>` as demonstrated above, or by oauth or oauth2.  For oauth use `:oauth-token <token>` instead of `:auth` in the options map.  Likewise, for oauth2, include `:client-id <client_id> :client-token <client_token>` in the options map.
 
 You can access useful information returned by the API such as current
 rate limits, etags, etc. by checking the response with `core/api-meta`. You can then use this to perform conditional requests against the API. If the data has not changed, the keyword `:tentacles.core/not-modified` will be returned. This does not consume any API call quota.
