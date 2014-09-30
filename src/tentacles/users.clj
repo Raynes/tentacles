@@ -114,3 +114,8 @@
   "Delete a public key."
   [id options]
   (no-content? (api-call :delete "user/keys/%s" [id] options)))
+
+(defn my-teams
+  "List the currently authenticated user's teams across all organizations"
+  [& [options]]
+  (api-call :get "user/teams" nil options))
