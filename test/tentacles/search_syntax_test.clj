@@ -4,11 +4,12 @@
 
 (deftest query-should-not-contains-text-keyword
   (is (= "foo+bar+language:clojure+language:scala"
-         (generate-query-string {:language ["clojure" "scala"] :text ["foo" "bar"]}))))
+         (query-str {:language ["clojure" "scala"] :text ["foo" "bar"]}))))
 
-(deftest do-not-associate-nil-value
-  (let [init {:text :foo}]
-    (is (= {:text :foo :added :bar}
-           (-> init
-               (assoc-not-nil-value :added :bar)
-               (assoc-not-nil-value :skipped nil))))))
+(deftest criteria-with-one-element-seq-should-equals-criteria-with-string-element
+  (is (= (query-str {:language ["clojure"] :text ["foo"]})
+         (query-str {:language "clojure" :text "foo"}))))
+
+(deftest query-should-not-contains-nil-criteria
+  (is (= "foo"
+         (query-str {:language nil :text "foo"}))))

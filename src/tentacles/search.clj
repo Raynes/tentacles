@@ -4,14 +4,15 @@
         tentacles.search-syntax))
 
 (defn- search [path query & [sort order options]]
-  (let [query-params (-> options
-                         (assoc-not-nil-value :q (generate-query-string query))
-                         (assoc-not-nil-value :sort sort)
-                         (assoc-not-nil-value :order order))
+  (let [assoc-not-nil (fn [coll key value]
+                        (if (nil? value) coll (assoc coll key value)))
         result (api-call :get
                          path
                          nil
-                         query-params)]
+                         (-> options
+                             (assoc-not-nil :q (query-str query))
+                             (assoc-not-nil :sort sort)
+                             (assoc-not-nil :order order)))]
     (or (:items result) result)))
 
 (defn search-repositories-v3
