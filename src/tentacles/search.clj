@@ -1,6 +1,38 @@
 (ns tentacles.search
   "Implements the Github Search API: http://developer.github.com/v3/search/"
-  (:use [tentacles.core :only [api-call]]))
+  (:use [tentacles.core :only [api-call]]
+        tentacles.search-syntax))
+
+(defn- search [path query & [sort order options]]
+  (let [query-params (-> options
+                         (assoc-not-nil-value :q (generate-query-string query))
+                         (assoc-not-nil-value :sort sort)
+                         (assoc-not-nil-value :order order))
+        result (api-call :get
+                         path
+                         nil
+                         query-params)]
+    (or (:items result) result)))
+
+(defn search-repositories-v3
+  "Find repositories using GitHub Search API v3"
+  [query & [sort order options]]
+  (search "search/repositories" query sort order options))
+
+(defn search-issues-v3
+  "Find issues using GitHub Search API v3"
+  [query & [sort order options]]
+  (search "search/issues" query sort order options))
+
+(defn search-code-v3
+  "Find file contents using GitHub Search API v3"
+  [query & [sort order options]]
+  (search "search/code" query sort order options))
+
+(defn search-users-v3
+  "Find users using GitHub Search API v3"
+  [query & [sort order options]]
+  (search "search/users" query sort order options))
 
 (defn search-issues
   "Find issues by state and keyword"
