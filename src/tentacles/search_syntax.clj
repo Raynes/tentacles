@@ -8,7 +8,7 @@
     (cond
       (sequential? value) (->> value
                                (map #(gen-str key %))
-                               (clojure.string/join "+"))
+                               (clojure.string/join " "))
       (nil? value) nil
       :else (gen-str key value))))
 
@@ -19,4 +19,4 @@
     (->> query
          (map (fn [[k v]] (unwind-query k v)))
          (filter (comp not nil?))
-         (clojure.string/join "+"))))
+         (clojure.string/join " "))))

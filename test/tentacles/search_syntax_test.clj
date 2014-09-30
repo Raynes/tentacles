@@ -3,7 +3,7 @@
   (:use tentacles.search-syntax))
 
 (deftest query-should-not-contains-text-keyword
-  (is (= "foo+bar+language:clojure+language:scala"
+  (is (= "foo bar language:clojure language:scala"
          (query-str {:language ["clojure" "scala"] :text ["foo" "bar"]}))))
 
 (deftest criteria-with-one-element-seq-should-equals-criteria-with-string-element
