@@ -1,85 +1,170 @@
 (ns tentacles.search
   "Implements the Github Search API: http://developer.github.com/v3/search/"
   (:use [tentacles.core :only [api-call]]
-        tentacles.search-syntax))
+        [clojure.string :refer [join]]))
 
-(def ^{:private true} default-result-handler :items)
+(def ^{:private true} separator " ")
 
-(defn- search [path keywords query options result-handler]
-  (let [handler (or result-handler default-result-handler)
-        result (api-call :get
-                         path
-                         nil
-                         (assoc options :q (query-str keywords query)))
-        handled-result (handler result)]
-    (if (nil? handled-result) result handled-result)))
+(defn- unwind-query
+  [key value]
+  (letfn [(gen-str
+            [k v]
+            (str (name k) ":" v))]
+    (cond
+      (sequential? value) (->> value
+                               (map #(gen-str key %))
+                               (join separator))
+      (nil? value) nil
+      :else (gen-str key value))))
 
-(defn search-repositories-v3
-  "Find repositories using GitHub Search API v3"
-  [keywords & [query options result-handler]]
-  (search "search/repositories" keywords query options result-handler))
+(defn search-term
+  "Builds search term based on keywords and qualifiers."
+  [keywords & [query]]
+  (let [joined-keywords (if (sequential? keywords) (join separator keywords) keywords)]
+    (if (empty? query)
+      joined-keywords
+      (->> query
+           (map (fn [[k v]] (unwind-query k v)))
+           (into [joined-keywords])
+           (filter (comp not nil?))
+           (join separator)))))
 
-(defn search-issues-v3
-  "Find issues using GitHub Search API v3"
-  [keywords & [query options result-handler]]
-  (search "search/issues" keywords query options result-handler))
-
-(defn search-code-v3
-  "Find file contents using GitHub Search API v3"
-  [keywords & [query options result-handler]]
-  (search "search/code" keywords query options result-handler))
-
-(defn search-users-v3
-  "Find users using GitHub Search API v3"
-  [keywords & [query options result-handler]]
-  (search "search/users" keywords query options result-handler))
-
-(defn search-issues
-  "Find issues by state and keyword"
-  [user repo state keyword & [options]]
-  (let [results (api-call :get
-                          "/legacy/issues/search/%s/%s/%s/%s"
-            			  [user repo state keyword]
-            			  options)]
-    (or (:issues results)
-        results)))
+(defn- search [path keywords query options]
+  (api-call :get
+            path
+            nil
+            (assoc options :q (search-term keywords query))))
 
 (defn search-repos
-  "Find repositories by keyword. This is a legacy method and does not follow
-   API v3 pagination rules. It will return up to 100 results per page and pages
-   are fetched by passing the start-page parameter.
-   Options are:
-     start-page: a number. Default is first page.
-     language: filter by language"
-  [keyword & [options]]
-  (let [results (api-call :get "/legacy/repos/search/%s" [keyword] options)]
-    (or (:repositories results)
-        results)))
+  "Find repositories via various criteria. This method returns up to 100
+  results per page.
 
-(defn search-users
-  "Find users by keyword."
-  [keyword & [options]]
-  (let [results (api-call :get "/legacy/user/search/%s" [keyword] options)]
-    (or (:users results)
-        results)))
+  Parameters are:
+    keywords - The search keywords. Can be string or sequence of strings.
+    query - The search qualifiers. Query is a map that contains qualifiers
+      values where key is a qualifier name.
+
+  The query map can contains any combination of the supported repository
+  search qualifiers. See full list in:
+    https://developer.github.com/v3/search/#search-repositories
+
+  Sort and order fields are available via the options map.
+
+  This method follows API v3 pagination rules. More details about
+  pagination rules in: https://developer.github.com/v3/#pagination
+
+  Returns map with the following elements:
+    :total_count - The total number of found items.
+    :incomplete_results - true if query exceeds the time limit.
+    :items - The result vector of found items.
+
+  Example:
+  (search-repos \"tetris\"
+              {:language \"assembly\"}
+              {:sort \"stars\" :order \"desc\"})
+
+  This corresponds to the following search term:
+  https://api.github.com/search/repositories?
+    q=tetris+language:assembly&sort=stars&order=desc"
+  [keywords & [query options]]
+  (search "search/repositories" keywords query options))
 
 (defn search-code
   "Find file contents via various criteria. This method returns up to 100
   results per page.
+
   Parameters are:
-    q: string - The search terms. I.e: 'defn mymethod in:file language:cljj'
-    sort: string (optional) - Sort field, defaults to best match,
-    order: string (optional) - Sort order if sort parameter is provided.
+    keywords - The search keywords. Can be string or sequence of strings.
+    query - The search qualifiers. Query param is a map that contains qualifiers
+      values where key is a qualifier name.
 
-  i.e: (search/search-code \"addClass in:file language:js repo:jquery/jquery\")
+  The query map can contains any combination of the supported repository
+  search qualifiers. See full list in:
+    https://developer.github.com/v3/search/#search-code
 
-  More details about the search terms syntax in:
-  http://developer.github.com/v3/search/#search-code"
-  [query & [sort order options]]
-  (let [results (api-call :get "search/code" nil
-                          (assoc options
-                                 :q query
-                                 :sort sort
-                                 :order order))]
-    (or (:code results)
-        results)))
+  Sort and order fields are available via the options map.
+
+  This method follows API v3 pagination rules. More details about
+  pagination rules in: https://developer.github.com/v3/#pagination
+
+  Returns map with the following elements:
+    :total_count - The total number of found items.
+    :incomplete_results - true if query exceeds the time limit.
+    :items - The result vector of found items.
+
+  Example:
+  (search-code \"addClass\"
+              {:in \"file\" :language \"js\" :repo \"jquery/jquery\"})
+
+  This corresponds to the following search term:
+  https://api.github.com/search/code?
+    q=addClass+in:file+language:js+repo:jquery/jquery"
+  [keywords & [query options]]
+  (search "search/code" keywords query options))
+
+(defn search-issues
+  "Find issues by state and keyword. This method returns up to 100
+  results per page.
+
+  Parameters are:
+    keywords - The search keywords. Can be string or sequence of strings.
+    query - The search qualifiers. Query is a map that contains qualifiers
+      values where key is a qualifier name.
+
+  The query map can contains any combination of the supported repository
+  search qualifiers. See full list in:
+    https://developer.github.com/v3/search/#search-issues
+
+  Sort and order fields are available via the options map.
+
+  This method follows API v3 pagination rules. More details about
+  pagination rules in: https://developer.github.com/v3/#pagination
+
+  Returns map with the following elements:
+    :total_count - The total number of found items.
+    :incomplete_results - true if query exceeds the time limit.
+    :items - The result vector of found items.
+
+  Example:
+  (search-issues \"windows\"
+               {:label \"bug\" :language \"python\" :state \"open\"}
+               {:sort \"created\" :order \"asc\"})
+
+  This corresponds to the following search term:
+  https://api.github.com/search/issues?
+    q=windows+label:bug+language:python+state:open&
+    sort=created&order=asc"
+  [keywords & [query options]]
+  (search "search/issues" keywords query options))
+
+(defn search-users
+  "Find users via various criteria. This method returns up to 100
+  results per page.
+
+  Parameters are:
+    keywords - The search keywords. Can be string or sequence of strings.
+    query - The search qualifiers. Query is a map that contains qualifiers
+      values where key is a qualifier name.
+
+  The query map can contains any combination of the supported repository
+  search qualifiers. See full list in:
+    https://developer.github.com/v3/search/#search-users
+
+  Sort and order fields are available via the options map.
+
+  This method follows API v3 pagination rules. More details about
+  pagination rules in: https://developer.github.com/v3/#pagination
+
+  Returns map with the following elements:
+    :total_count - The total number of found items.
+    :incomplete_results - true if query exceeds the time limit.
+    :items - The result vector of found items.
+
+  Example:
+  (search-users \"tom\" {:repos \">42\" :followers \">1000\"})
+
+  This corresponds to the following search term:
+  https://api.github.com/search/users?
+    q=tom+repos:%3E42+followers:%3E1000"
+  [keywords & [query options]]
+  (search "search/users" keywords query options))
