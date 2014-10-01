@@ -3,37 +3,36 @@
   (:use [tentacles.core :only [api-call]]
         tentacles.search-syntax))
 
-(defn- search [path query & [sort order options]]
-  (let [assoc-not-nil (fn [coll key value]
-                        (if (nil? value) coll (assoc coll key value)))
+(def ^{:private true} default-result-handler :items)
+
+(defn- search [path keywords query options result-handler]
+  (let [handler (or result-handler default-result-handler)
         result (api-call :get
                          path
                          nil
-                         (-> options
-                             (assoc-not-nil :q (query-str query))
-                             (assoc-not-nil :sort sort)
-                             (assoc-not-nil :order order)))]
-    (or (:items result) result)))
+                         (assoc options :q (query-str keywords query)))
+        handled-result (handler result)]
+    (if (nil? handled-result) result handled-result)))
 
 (defn search-repositories-v3
   "Find repositories using GitHub Search API v3"
-  [query & [sort order options]]
-  (search "search/repositories" query sort order options))
+  [keywords & [query options result-handler]]
+  (search "search/repositories" keywords query options result-handler))
 
 (defn search-issues-v3
   "Find issues using GitHub Search API v3"
-  [query & [sort order options]]
-  (search "search/issues" query sort order options))
+  [keywords & [query options result-handler]]
+  (search "search/issues" keywords query options result-handler))
 
 (defn search-code-v3
   "Find file contents using GitHub Search API v3"
-  [query & [sort order options]]
-  (search "search/code" query sort order options))
+  [keywords & [query options result-handler]]
+  (search "search/code" keywords query options result-handler))
 
 (defn search-users-v3
   "Find users using GitHub Search API v3"
-  [query & [sort order options]]
-  (search "search/users" query sort order options))
+  [keywords & [query options result-handler]]
+  (search "search/users" keywords query options result-handler))
 
 (defn search-issues
   "Find issues by state and keyword"
