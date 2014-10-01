@@ -18,7 +18,7 @@
       :else (gen-str key value))))
 
 (defn search-term
-  "Builds search term based on keywords and qualifiers."
+  "Build search term based on keywords and qualifiers."
   [keywords & [query]]
   (let [joined-keywords (if (sequential? keywords) (join separator keywords) keywords)]
     (if (empty? query)
@@ -53,7 +53,7 @@
   This method follows API v3 pagination rules. More details about
   pagination rules in: https://developer.github.com/v3/#pagination
 
-  Returns map with the following elements:
+  Return map with the following elements:
     :total_count - The total number of found items.
     :incomplete_results - true if query exceeds the time limit.
     :items - The result vector of found items.
@@ -87,7 +87,7 @@
   This method follows API v3 pagination rules. More details about
   pagination rules in: https://developer.github.com/v3/#pagination
 
-  Returns map with the following elements:
+  Return map with the following elements:
     :total_count - The total number of found items.
     :incomplete_results - true if query exceeds the time limit.
     :items - The result vector of found items.
@@ -120,7 +120,7 @@
   This method follows API v3 pagination rules. More details about
   pagination rules in: https://developer.github.com/v3/#pagination
 
-  Returns map with the following elements:
+  Return map with the following elements:
     :total_count - The total number of found items.
     :incomplete_results - true if query exceeds the time limit.
     :items - The result vector of found items.
@@ -155,7 +155,7 @@
   This method follows API v3 pagination rules. More details about
   pagination rules in: https://developer.github.com/v3/#pagination
 
-  Returns map with the following elements:
+  Return map with the following elements:
     :total_count - The total number of found items.
     :incomplete_results - true if query exceeds the time limit.
     :items - The result vector of found items.
