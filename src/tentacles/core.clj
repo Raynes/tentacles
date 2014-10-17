@@ -96,7 +96,7 @@
   ([method end-point positional] (api-call method end-point positional nil))
   ([method end-point positional query]
      (let [query (query-map query)
-           all-pages? (*all-pages*)
+           all-pages? *all-pages*
            req (make-request method end-point positional query)
            exec-request-one (fn exec-request-one [req]
                               (safe-parse (http/request req)))
