@@ -18,7 +18,7 @@
 
 (defn parse-json
   "Same as json/parse-string but handles nil gracefully."
-  [s] (when s (json/parse-string s true)))
+  [s] (when s (json/parse-string s (fn [k] (keyword (.replace (name k) "_" "-"))))))
 
 (defn parse-link [link]
   (let [[_ url] (re-find #"<(.*)>" link)
