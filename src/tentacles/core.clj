@@ -133,3 +133,7 @@
 (defmacro with-defaults [options & body]
  `(binding [defaults ~options]
     ~@body))
+
+(defmacro with-all-pages [& body]
+  `(binding [*all-pages* true]
+    ~@body))
