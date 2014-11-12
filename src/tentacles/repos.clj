@@ -402,7 +402,7 @@
   [user repo mode event callback & [options]]
   (no-content?
    (post "https://api.github.com/hub"
-         (merge 
+         (merge
            (when-let [oauth-token (:oauth-token options)]
              {:headers {"Authorization" (str "token " oauth-token)}})
            {:basic-auth (:auth options)
@@ -464,3 +464,63 @@
        (if (= (resp :status) 302)
          (get-in resp [:headers "location"])
          resp))))
+
+;; ## Status API
+(def combined-state-opt-in "application/vnd.github.she-hulk-preview+json")
+
+(defn statuses
+  "Returns the combined status of a ref (SHA, branch, or tag).
+  By default, returns the combined status. Include `:combined? false'
+  in options to disable combined status
+  (see https://developer.github.com/v3/repos/statuses/#get-the-combined-status-for-a-specific-ref)"
+  [user repo ref & [options]]
+  (let [combined? (:combined? options true)]
+    (api-call :get
+              (if combined?
+                "repos/%s/%s/commits/%s/status"
+                "repos/%s/%s/statuses/%s")
+              [user repo ref]
+              (cond-> options
+                      combined? (assoc :accept combined-state-opt-in)))))
+
+(defn create-status
+  "Creates a status.
+  Options are: state target-url description context; state is mandatory"
+  [user repo sha options]
+  (api-call :post "repos/%s/%s/statuses/%s" [user repo sha]
+            (assoc options
+              :accept combined-state-opt-in)))
+
+;; ## Deployments API
+(def deployments-opt-in "application/vnd.github.cannonball-preview+json")
+
+(defn deployments
+  "Returns deployments for a repo"
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/deployments" [user repo]
+            (assoc options
+              :accept deployments-opt-in)))
+
+(defn create-deployment
+  "Creates a deployment for a ref.
+  Options are: force, payload, auto-merge, description"
+  [user repo ref options]
+  (api-call :post "repos/%s/%s/deployments" [user repo]
+            (assoc options
+              :ref ref
+              :accept deployments-opt-in)))
+
+(defn deployment-statuses
+  "Returns deployment statuses for a deployment"
+  [user repo deployment options]
+  (api-call :get "repos/%s/%s/deployments/%s/statuses" [user repo deployment]
+            (assoc options
+              :accept deployments-opt-in)))
+
+(defn create-deployment-status
+  "Create a deployment status.
+  Options are: state (required), target-url, description"
+  [user repo deployment options]
+  (api-call :post "repos/%s/%s/deployments/%s/statuses" [user repo deployment]
+            (assoc options
+              :accept deployments-opt-in)))
