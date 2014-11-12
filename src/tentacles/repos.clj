@@ -480,12 +480,8 @@
                 "repos/%s/%s/commits/%s/status"
                 "repos/%s/%s/statuses/%s")
               [user repo ref]
-              (cond->
-               options
-
-               combined?
-               (assoc
-                   :accept combined-state-opt-in)))))
+              (cond-> options
+                      combined? (assoc :accept combined-state-opt-in)))))
 
 (defn create-status
   "Creates a status.
