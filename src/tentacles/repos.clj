@@ -424,7 +424,7 @@
        (if-let [^String encoded (get-in res path)]
          (let [trimmed (.replace encoded "\n" "")
                raw (.getBytes trimmed "UTF-8")
-               decoded (b64/decode raw)
+               decoded (if (seq raw) (b64/decode raw) (byte-array))
                done (if str? (String. decoded "UTF-8") decoded)]
            (assoc-in res path done))
          res)
