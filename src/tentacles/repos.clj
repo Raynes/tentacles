@@ -524,3 +524,27 @@
   (api-call :post "repos/%s/%s/deployments/%s/statuses" [user repo deployment]
             (assoc options
               :accept deployments-opt-in)))
+
+;; # Releases api
+
+(defn releases
+  "List releases for a repository."
+  [user repo]
+  (api-call :get "repos/%s/%s/releases" [user repo]))
+
+(defn specific-release
+  "Gets a specific release."
+  [user repo id & [options]]
+  (api-call :get "repos/%s/%s/releases/%s" [user repo id] options))
+
+
+(defn create-release
+  "Creates a release.
+   Options are: tag-name (required), target-commitish, name, body, draft, prerelease"
+  [user repo options]
+  (api-call :post "repos/%s/%s/releases" [user repo] options))
+
+(defn delete-release
+  "Deletes a release."
+  [user repo id & [options]]
+  (api-call :delete "repos/%s/%s/releases/%s" [user repo id] options))
