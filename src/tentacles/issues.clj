@@ -72,17 +72,16 @@
   (api-call :get "repos/%s/%s/issues/%s" [user repo number] options))
 
 (defn create-issue
-  [user repo title options]
   "Create an issue.
    Options are:
      milestone -- Milestone number to associate with this issue..
      assignee  -- A username to assign to this issue.
      labels    -- A list of labels to associate with this issue.
      body      -- The body text of the issue."
+  [user repo title options]
   (api-call :post "repos/%s/%s/issues" [user repo] (assoc options :title title)))
 
 (defn edit-issue
-  [user repo id options]
   "Edit an issue.
    Options are:
      milestone -- Milestone number to associate with this issue..
@@ -92,18 +91,19 @@
      state     -- open or closed.
      title     -- Title of the issue.
      body      -- The body text of the issue."
+  [user repo id options]
   (api-call :post "repos/%s/%s/issues/%s" [user repo id] options))
 
 ;; ## Issue Comments API
 
 (defn issue-comments
-  [user repo id & [options]]
   "List comments on an issue."
+  [user repo id & [options]]
   (api-call :get "repos/%s/%s/issues/%s/comments" [user repo id] options))
 
 (defn specific-comment
-  [user repo comment-id & [options]]
   "Get a specific comment."
+  [user repo comment-id & [options]]
   (api-call :get "repos/%s/%s/issues/comments/%s" [user repo comment-id] options))
 
 (defn create-comment
