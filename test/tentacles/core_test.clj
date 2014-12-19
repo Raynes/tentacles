@@ -3,7 +3,7 @@
   (:require [tentacles.core :as core]))
 
 (deftest request-contains-user-agent
-  (let [request (core/make-request :get "test" nil {"user_agent" "Mozilla"})]
+  (let [request (core/make-request :get "test" nil {:user-agent "Mozilla"})]
     (do (is (empty?    (:query-params request)))
       (is (contains? (:headers request) "User-Agent"))
       (is (= (get (:headers request) "User-Agent") "Mozilla")))))
