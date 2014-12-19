@@ -70,7 +70,7 @@
   "Given a clj-http request, and a 'next' url string, merge the next url into the request"
   [req url]
   (let [url-map (url/url url)]
-    (assoc-in req [:query-params] (-> url-map :query))))
+    (assoc-in req [:query-params] (:query url-map))))
 
 (defn no-content?
   "Takes a response and returns true if it is a 204 response, false otherwise."

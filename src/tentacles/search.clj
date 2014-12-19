@@ -26,8 +26,9 @@
            (filter (comp not nil?))
            (join separator)))))
 
-(defn ^{:private true} search [end-point keywords query options]
+(defn ^{:private true} search
   "Performs Github api call with given params."
+  [end-point keywords query options]
   (api-call :get
                  end-point
                  nil

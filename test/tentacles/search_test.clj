@@ -1,6 +1,6 @@
 (ns tentacles.search-test
-  (:use clojure.test)
-  (:use tentacles.search))
+  (:require [clojure.test :refer [deftest is]]
+            [tentacles.search :refer [search-term]]))
 
 (deftest query-should-not-contains-text-keyword
   (is (= "foo bar language:clojure language:scala"
