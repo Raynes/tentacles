@@ -2,8 +2,7 @@
   (:require [clj-http.client :as http]
             [cheshire.core :as json]
             [clojure.string :as str]
-            [cemerick.url :as url])
-  (:import java.net.URLEncoder))
+            [cemerick.url :as url]))
 
 (def ^:dynamic url "https://api.github.com/")
 (def ^:dynamic defaults {})
@@ -80,7 +79,7 @@
   "Creates a URL out of end-point and positional. Called URLEncoder/encode on
    the elements of positional and then formats them in."
   [end-point positional]
-  (str url (apply format end-point (map #(URLEncoder/encode (str %) "UTF-8") positional))))
+  (str url (apply format end-point (map url/url-encode positional))))
 
 (defn make-request [method end-point positional
                     {:strs [auth throw_exceptions follow_redirects accept
