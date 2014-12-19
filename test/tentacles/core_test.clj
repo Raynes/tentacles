@@ -2,12 +2,6 @@
   (:use clojure.test)
   (:require [tentacles.core :as core]))
 
-(deftest request-contains-user-agent
-  (let [request (core/make-request :get "test" nil {"user_agent" "Mozilla"})]
-    (do (is (empty?    (:query-params request)))
-      (is (contains? (:headers request) "User-Agent"))
-      (is (= (get (:headers request) "User-Agent") "Mozilla")))))
-
 (deftest hitting-rate-limit-is-propagated
   (is (= (:status (core/safe-parse {:status 403}))
          403)))

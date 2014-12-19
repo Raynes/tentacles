@@ -6,6 +6,7 @@
   (:import java.net.URLEncoder))
 
 (def ^:dynamic url "https://api.github.com/")
+(def ^:dynamic *all-pages* false)
 (def ^:dynamic defaults {})
 
 (defn query-map
@@ -17,7 +18,7 @@
 
 (defn parse-json
   "Same as json/parse-string but handles nil gracefully."
-  [s] (when s (json/parse-string s true)))
+  [s] (when s (json/parse-string s (fn [k] (keyword (.replace (name k) "_" "-"))))))
 
 (defn parse-link [link]
   (let [[_ url] (re-find #"<(.*)>" link)
@@ -82,31 +83,12 @@
   [end-point positional]
   (str url (apply format end-point (map #(URLEncoder/encode (str %) "UTF-8") positional))))
 
-(defn make-request [method end-point positional
-                    {:strs [auth throw_exceptions follow_redirects accept
-                            oauth_token etag if_modified_since user_agent]
-                     :or {follow_redirects true throw_exceptions false}
-                     :as query}]
-  (let [req (merge-with merge
-                        {:url (format-url end-point positional)
-                         :basic-auth auth
-                         :throw-exceptions throw_exceptions
-                         :follow-redirects follow_redirects
-                         :method method}
-                        (when accept
-                          {:headers {"Accept" accept}})
-                        (when oauth_token
-                          {:headers {"Authorization" (str "token " oauth_token)}})
-                        (when etag
-                          {:headers {"if-None-Match" etag}})
-                        (when user_agent
-                          {:headers {"User-Agent" user_agent}})
-                        (when if_modified_since
-                          {:headers {"if-Modified-Since" if_modified_since}}))
-        proper-query (dissoc query "auth" "oauth_token" "all_pages" "accept" "user_agent")
+(defn make-request [method end-point positional query]
+  (let [req {:url (format-url end-point positional)
+             :method method}
         req (if (#{:post :put :delete} method)
-              (assoc req :body (json/generate-string (or (proper-query "raw") proper-query)))
-              (assoc req :query-params proper-query))]
+              (assoc req :body (json/generate-string (or (query "raw") query)))
+              (assoc req :query-params query))]
     req))
 
 (defn api-call
@@ -114,7 +96,7 @@
   ([method end-point positional] (api-call method end-point positional nil))
   ([method end-point positional query]
      (let [query (query-map query)
-           all-pages? (query "all_pages")
+           all-pages? *all-pages*
            req (make-request method end-point positional query)
            exec-request-one (fn exec-request-one [req]
                               (safe-parse (http/request req)))
@@ -127,11 +109,10 @@
        (exec-request req))))
 
 (defn raw-api-call
-  ([method end-point] (raw-api-call method end-point nil nil))
-  ([method end-point positional] (raw-api-call method end-point positional nil))
+  ([method end-point] (raw-api-call method end-point nil nil nil))
+  ([method end-point positional] (raw-api-call method end-point positional nil nil))
   ([method end-point positional query]
      (let [query (query-map query)
-           all-pages? (query "all_pages")
            req (make-request method end-point positional query)]
        (http/request req))))
 
@@ -151,4 +132,8 @@
 
 (defmacro with-defaults [options & body]
  `(binding [defaults ~options]
+    ~@body))
+
+(defmacro with-all-pages [& body]
+  `(binding [*all-pages* true]
     ~@body))
