@@ -422,11 +422,13 @@
   ([res str? path]
      (if (and (map? res) (= (:encoding res) "base64"))
        (if-let [^String encoded (get-in res path)]
-         (let [trimmed (.replace encoded "\n" "")
-               raw (.getBytes trimmed "UTF-8")
-               decoded (if (seq raw) (b64/decode raw) (byte-array))
-               done (if str? (String. decoded "UTF-8") decoded)]
-           (assoc-in res path done))
+         (if (not (empty? encoded))
+           (let [trimmed (.replace encoded "\n" "")
+                 raw (.getBytes trimmed "UTF-8")
+                 decoded (if (seq raw) (b64/decode raw) (byte-array))
+                 done (if str? (String. decoded "UTF-8") decoded)]
+             (assoc-in res path done))
+           res)
          res)
        res))
   ([res str?] (decode-b64 res str? [:content]))
