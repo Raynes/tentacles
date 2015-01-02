@@ -50,6 +50,8 @@
    as json. Otherwise, parse and return the body if json, or return the body if raw."
   [{:keys [headers status body] :as resp}]
   (cond
+   (= 202 status)
+   ::accepted
    (= 304 status)
    ::not-modified
    (#{400 401 204 422 403 404 500} status)
