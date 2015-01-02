@@ -550,3 +550,30 @@
   "Deletes a release."
   [user repo id & [options]]
   (api-call :delete "repos/%s/%s/releases/%s" [user repo id] options))
+
+;; ## Statistics API
+
+(defn contributor-statistics
+  "List additions, deletions, and commit counts per contributor"
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/stats/contributors" [user repo] options))
+
+(defn commit-activity
+  "List weekly commit activiy for the past year"
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/stats/commit_activity" [user repo] options))
+
+(defn code-frequency
+  "List weekly additions and deletions"
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/stats/code_frequency" [user repo] options))
+
+(defn participation
+  "List weekly commit count grouped by the owner and all other users"
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/stats/participation" [user repo] options))
+
+(defn punch-card
+  "List commit count per hour in the day"
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/stats/punch_card" [user repo] options))
