@@ -125,17 +125,17 @@
 (defn team-member?
   "Get a specific team member."
   [id user options]
-  (no-content? (api-call :get "teams/%s/members/%s" [id user] options)))
+  (no-content? (api-call :get "teams/%s/memberships/%s" [id user] options)))
 
 (defn add-team-member
   "Add a team member."
   [id user options]
-  (no-content? (api-call :put "teams/%s/members/%s" [id user] options)))
+  (no-content? (api-call :put "teams/%s/memberships/%s" [id user] options)))
 
 (defn delete-team-member
   "Remove a team member."
   [id user options]
-  (no-content? (api-call :delete "teams/%s/members/%s" [id user] options)))
+  (no-content? (api-call :delete "teams/%s/memberships/%s" [id user] options)))
 
 (defn list-team-repos
   "List the team repositories."
