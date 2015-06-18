@@ -434,6 +434,9 @@
   ([res str?] (decode-b64 res str? [:content]))
   ([res] (decode-b64 res false [:content])))
 
+(defn encode-b64 [content]
+  (String. (b64/encode (.getBytes content "UTF-8")) "UTF-8"))
+
 (defn readme
   "Get the preferred README for a repository.
    Options are:
@@ -453,6 +456,23 @@
   (decode-b64
    (api-call :get "repos/%s/%s/contents/%s" [user repo path] (dissoc options :str?))
    str?))
+
+(defn update-contents
+  "Update a file in a repository
+   path -- The content path.
+   message -- The commit message.
+   content -- The updated file content, Base64 encoded.
+   sha -- The blob SHA of the file being replaced.
+   Options are:
+      branch -- The branch name. Default: the repository’s default branch (usually master)
+      name -- The name of the author (or committer) of the commit
+      email -- The email of the author (or committer) of the commit"
+  [user repo path message content sha & [options]]
+  (let [body (merge {:message message
+                     :content (encode-b64 content)
+                     :sha     sha}
+                    options)]
+    (api-call :put "repos/%s/%s/contents/%s" [user repo path] body)))
 
 (defn archive-link
   "Get a URL to download a tarball or zipball archive for a repository.
