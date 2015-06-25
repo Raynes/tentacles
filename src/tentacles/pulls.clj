@@ -67,6 +67,11 @@
 
 ;; ## Pull Request Comment API
 
+(defn repo-comments
+  "List pull request comments in a repository."
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/pulls/comments" [user repo] options))
+
 (defn comments
   "List comments on a pull request."
   [user repo id & [options]]

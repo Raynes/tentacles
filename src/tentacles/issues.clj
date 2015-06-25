@@ -96,6 +96,11 @@
 
 ;; ## Issue Comments API
 
+(defn repo-issue-comments
+  "List issue comments in a repository."
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/issues/comments" [user repo] options))
+
 (defn issue-comments
   "List comments on an issue."
   [user repo id & [options]]
