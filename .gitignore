@@ -8,3 +8,5 @@ testinfo.clj
 target/
 docs/
 .nrepl-port
+.idea/*
+*.iml
