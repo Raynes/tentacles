@@ -85,7 +85,8 @@
 
 (defn make-request [method end-point positional
                     {:keys [auth throw-exceptions follow-redirects accept
-                            oauth-token etag if-modified-since user-agent]
+                            oauth-token etag if-modified-since user-agent
+                            otp]
                      :or {follow-redirects true throw-exceptions false}
                      :as query}]
   (let [req (merge-with merge
@@ -102,10 +103,12 @@
                           {:headers {"if-None-Match" etag}})
                         (when user-agent
                           {:headers {"User-Agent" user-agent}})
+                        (when otp
+                          {:headers {"X-GitHub-OTP" otp}})
                         (when if-modified-since
                           {:headers {"if-Modified-Since" if-modified-since}}))
         raw-query (:raw query)
-        proper-query (query-map (dissoc query :auth :oauth-token :all-pages :accept :user-agent))
+        proper-query (query-map (dissoc query :auth :oauth-token :all-pages :accept :user-agent :otp))
         req (if (#{:post :put :delete} method)
               (assoc req :body (json/generate-string (or raw-query proper-query)))
               (assoc req :query-params proper-query))]
