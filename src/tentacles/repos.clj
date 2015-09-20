@@ -79,7 +79,7 @@
       has-wiki      -- true, false.
       has-downloads -- true, false."
   [user repo options]
-  (api-call :post "repos/%s/%s"
+  (api-call :patch "repos/%s/%s"
             [user repo]
             (if (:name options)
               options
@@ -279,14 +279,6 @@
   (api-call :post "repos/%s/%s/keys" [user repo]
             (assoc options :title title :key key)))
 
-(defn edit-key
-  "Edit a deploy key.
-   Options are:
-      title -- New title.
-      key   -- New key."
-  [user repo id options]
-  (api-call :post "repos/%s/%s/keys/%s" [user repo id] options))
-
 (defn delete-key
   "Delete a deploy key."
   [user repo id options]
@@ -380,7 +372,7 @@
       active        -- true or false; determines if the hook is actually
                        triggered on pushes."
   [user repo id options]
-  (api-call :post "repos/%s/%s/hooks/%s" [user repo id] options))
+  (api-call :patch "repos/%s/%s/hooks/%s" [user repo id] options))
 
 (defn test-hook
   "Test a hook."

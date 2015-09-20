@@ -92,7 +92,7 @@
      title     -- Title of the issue.
      body      -- The body text of the issue."
   [user repo id options]
-  (api-call :post "repos/%s/%s/issues/%s" [user repo id] options))
+  (api-call :patch "repos/%s/%s/issues/%s" [user repo id] options))
 
 ;; ## Issue Comments API
 
@@ -120,7 +120,7 @@
 (defn edit-comment
   "Edit a comment."
   [user repo comment-id body options]
-  (api-call :post "repos/%s/%s/issues/comments/%s"
+  (api-call :patch "repos/%s/%s/issues/comments/%s"
             [user repo comment-id] (assoc options :body body)))
 
 (defn delete-comment
@@ -173,7 +173,7 @@
 (defn edit-label
   "Edit a label."
   [user repo id name color options]
-  (api-call :post "repos/%s/%s/labels/%s"
+  (api-call :patch "repos/%s/%s/labels/%s"
             [user repo id] (assoc options :name name :color color)))
 
 (defn delete-label
@@ -242,7 +242,7 @@
      description -- a description string.
      due-on      -- String ISO 8601 timestamp"
   [user repo id title options]
-  (api-call :post "repos/%s/%s/milestones/%s"
+  (api-call :patch "repos/%s/%s/milestones/%s"
             [user repo id] (assoc options :title title)))
 
 (defn delete-milestone
