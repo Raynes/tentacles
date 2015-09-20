@@ -96,7 +96,7 @@
 (defn fork-gist
   "Fork a gist."
   [id & [options]]
-  (api-call :post "gists/%s/fork" [id] options))
+  (api-call :post "gists/%s/forks" [id] options))
 
 (defn delete-gist
   "Delete a gist."
