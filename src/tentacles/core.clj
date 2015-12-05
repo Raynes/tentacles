@@ -80,17 +80,19 @@
 (defn format-url
   "Creates a URL out of end-point and positional. Called URLEncoder/encode on
    the elements of positional and then formats them in."
-  [end-point positional]
-  (str url (apply format end-point (map url/url-encode positional))))
+  [host end-point positional]
+  (str host (apply format end-point (map url/url-encode positional))))
+
 
 (defn make-request [method end-point positional
                     {:keys [auth throw-exceptions follow-redirects accept
                             oauth-token etag if-modified-since user-agent
-                            otp]
-                     :or {follow-redirects true throw-exceptions false}
+                            otp url]
+                     :or {follow-redirects true throw-exceptions false
+                          url url}
                      :as query}]
   (let [req (merge-with merge
-                        {:url (format-url end-point positional)
+                        {:url (format-url url end-point positional)
                          :basic-auth auth
                          :throw-exceptions throw-exceptions
                          :follow-redirects follow-redirects

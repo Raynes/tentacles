@@ -8,6 +8,19 @@
       (is (contains? (:headers request) "User-Agent"))
       (is (= (get (:headers request) "User-Agent") "Mozilla")))))
 
+(deftest settable-enterprise-end-point-to-request
+  (let [end-point "https://hostname/api/v3/"]
+    (testing "When default url"
+      (let [request (core/make-request :get "test" nil nil)]
+        (is (= (:url request) "https://api.github.com/test"))))
+    (testing "When set url with option"
+      (let [request (core/make-request :get "test" nil {:url end-point})]
+        (is (= (:url request) (str end-point "test")))))
+    (testing "When set url with binding macro"
+      (binding [core/url end-point]
+        (let [request (core/make-request :get "test" nil nil)]
+          (is (= (:url request) (str end-point "test"))))))))
+
 (deftest hitting-rate-limit-is-propagated
   (is (= (:status (core/safe-parse {:status 403}))
          403)))

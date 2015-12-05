@@ -67,6 +67,8 @@ Here are some lovely [Marginalia docs](http://raynes.github.com/tentacles). I al
 
 If you run into something that isn't documented well or you don't understand, look for the API call on the Github API [docs](http://developer.github.com/v3/). If you feel like it, please submit a pull request with improved documentation. Let's make this the most impressive Github API library around!
 
+For Working with Github Enterprise use `:url "http://<hostname>/api/v3/"`
+
 ## Hacking
 
 ### Running the tests
