@@ -4,9 +4,26 @@
 
 (deftest request-contains-user-agent
   (let [request (core/make-request :get "test" nil {:user-agent "Mozilla"})]
-    (do (is (empty?    (:query-params request)))
+    (do
+      (is (empty?    (:query-params request)))
       (is (contains? (:headers request) "User-Agent"))
       (is (= (get (:headers request) "User-Agent") "Mozilla")))))
+
+(deftest request-contains-user-agent-from-defaults
+  (core/with-defaults {:user-agent "Mozilla"}
+    (let [request (core/make-request :get "test" nil {})]
+      (do
+        (is (empty?    (:query-params request)))
+        (is (contains? (:headers request) "User-Agent"))
+        (is (= (get (:headers request) "User-Agent") "Mozilla"))))))
+
+(deftest adhoc-options-override-defaults
+  (core/with-defaults {:user-agent "default"}
+    (let [request (core/make-request :get "test" nil {:user-agent "adhoc"})]
+      (do
+        (is (empty?    (:query-params request)))
+        (is (contains? (:headers request) "User-Agent"))
+        (is (= (get (:headers request) "User-Agent") "adhoc"))))))
 
 (deftest hitting-rate-limit-is-propagated
   (is (= (:status (core/safe-parse {:status 403}))
