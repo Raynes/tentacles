@@ -456,9 +456,9 @@
    content -- The updated file content, Base64 encoded.
    sha -- The blob SHA of the file being replaced.
    Options are:
-      branch -- The branch name. Default: the repository’s default branch (usually master)
-      name -- The name of the author (or committer) of the commit
-      email -- The email of the author (or committer) of the commit"
+      branch    -- The branch name. Default: the repository’s default branch (usually master)
+      author    -- A map containing :name and :email for the author of the commit
+      committer -- A map containing :name and :email for the committer of the commit"
   [user repo path message content sha & [options]]
   (let [body (merge {:message message
                      :content (encode-b64 content)
