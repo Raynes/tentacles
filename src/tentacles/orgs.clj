@@ -34,7 +34,7 @@
       location      -- Organization location.
       name          -- Name of the organization."
   [org options]
-  (api-call :post "orgs/%s" [org] options))
+  (api-call :patch "orgs/%s" [org] options))
 
 ;; ## Org Members API
 
@@ -110,7 +110,7 @@
                      push: team can push and pull but not admin.
                      admin: team can push, pull, and admin."
   [id options]
-  (api-call :post "teams/%s" [id] options))
+  (api-call :patch "teams/%s" [id] options))
 
 (defn delete-team
   "Delete a team."
