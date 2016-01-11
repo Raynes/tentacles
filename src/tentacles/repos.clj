@@ -466,6 +466,21 @@
                     options)]
     (api-call :put "repos/%s/%s/contents/%s" [user repo path] body)))
 
+(defn delete-contents
+  "Delete a file in a repository
+   path    -- The content path.
+   message -- The commit message.
+   sha     -- The blob SHA of the file being deleted.
+   Options are:
+      branch    -- The branch name. Default: the repository’s default branch (usually master)
+      author    -- A map containing :name and :email for the author of the commit
+      committer -- A map containing :name and :email for the committer of the commit"
+  [user repo path message sha & [options]]
+  (let [body (merge {:message message
+                     :sha     sha}
+                    options)]
+    (api-call :delete "repos/%s/%s/contents/%s" [user repo path] body)))
+
 (defn archive-link
   "Get a URL to download a tarball or zipball archive for a repository.
    Options are:
