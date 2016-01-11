@@ -8,10 +8,10 @@
 (def ^:dynamic defaults {})
 
 (defn query-map
-  "Merge defaults, turn keywords into strings, and replace hyphens with underscores."
+  "Turn keywords into strings, and replace hyphens with underscores."
   [entries]
   (into {}
-        (for [[k v] (concat defaults entries)]
+        (for [[k v] entries]
           [(.replace (name k) "-" "_") v])))
 
 (defn parse-json
@@ -83,13 +83,13 @@
   [end-point positional]
   (str url (apply format end-point (map url/url-encode positional))))
 
-(defn make-request [method end-point positional
-                    {:keys [auth throw-exceptions follow-redirects accept
-                            oauth-token etag if-modified-since user-agent
-                            otp]
-                     :or {follow-redirects true throw-exceptions false}
-                     :as query}]
-  (let [req (merge-with merge
+(defn make-request [method end-point positional query]
+  (let [{:keys [auth throw-exceptions follow-redirects accept
+                oauth-token etag if-modified-since user-agent
+                otp]
+         :or {follow-redirects true throw-exceptions false}
+         :as query} (merge defaults query)
+        req (merge-with merge
                         {:url (format-url end-point positional)
                          :basic-auth auth
                          :throw-exceptions throw-exceptions
