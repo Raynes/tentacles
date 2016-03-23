@@ -2,6 +2,10 @@
   (:use clojure.test)
   (:require [tentacles.core :as core]))
 
+(deftest patch-requests-encode-json-body
+  (let [request (core/make-request :patch "foo" nil {:bar "baz"})]
+    (is (= (:body request) "{\"bar\":\"baz\"}"))))
+
 (deftest request-contains-user-agent
   (let [request (core/make-request :get "test" nil {:user-agent "Mozilla"})]
     (do
