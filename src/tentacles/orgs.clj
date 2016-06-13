@@ -188,8 +188,8 @@
       events        -- A sequence of event strings. Replaces the events.
       active        -- true or false; determines if the hook is actually
                        triggered on pushes."
-  [org id options]
-  (api-call :patch "orgs/%s/hooks/%s" [org id] (assoc options :name "web")))
+  [org id config options]
+  (api-call :patch "orgs/%s/hooks/%s" [org id] (assoc options :config config)))
 
 (defn ping-hook
   "Ping a hook."
