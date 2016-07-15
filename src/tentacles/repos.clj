@@ -558,8 +558,8 @@
 
 (defn releases
   "List releases for a repository."
-  [user repo]
-  (api-call :get "repos/%s/%s/releases" [user repo]))
+  [user repo & [options]]
+  (api-call :get "repos/%s/%s/releases" [user repo] options))
 
 (defn specific-release
   "Gets a specific release."
