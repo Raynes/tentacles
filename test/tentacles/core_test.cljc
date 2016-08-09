@@ -1,6 +1,8 @@
 (ns tentacles.core-test
-  (:use clojure.test)
-  (:require [tentacles.core :as core]))
+  (:require #?(:clj [clojure.test :refer [deftest is]]
+               :cljs [cljs.test :refer-macros [deftest is testing run-tests]])
+               [tentacles.core :as core]
+               [cemerick.url :as url]))
 
 (deftest request-contains-user-agent
   (let [request (core/make-request :get "test" nil {:user-agent "Mozilla"})]

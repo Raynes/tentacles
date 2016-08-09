@@ -1,11 +1,17 @@
 (ns tentacles.repos
   "Implements the Github Repos API: http://developer.github.com/v3/repos/"
   (:refer-clojure :exclude [keys])
-  (:require [clojure.data.codec.base64 :as b64])
-  (:use [clj-http.client :only [post put]]
-        [clojure.java.io :only [file]]
-        [tentacles.core :only [api-call no-content? raw-api-call]]
-        [cheshire.core :only [generate-string]]))
+  #?(:clj
+     (:require [clojure.data.codec.base64 :as b64])
+     :cljs
+     (:require [cljs.source-map.base64 :as b64]))
+  #?(:clj
+     (:use [clj-http.client :only [post put]]
+           [clojure.java.io :only [file]]
+           [tentacles.core :only [api-call no-content? raw-api-call]]
+           [cheshire.core :only [generate-string]])
+     :cljs
+     (:use [tentacles.core :only [api-call no-content? raw-api-call]])))
 
 ;; ## Primary Repos API
 
@@ -216,36 +222,38 @@
   [user repo id options]
   (no-content? (api-call :delete "repos/%s/%s/downloads/%s" [user repo id] options)))
 
-;; Github uploads are a two step process. First we get a download resource and then
-;; we use that to upload the file.
-(defn download-resource
-  "Get a download resource for a file you want to upload. You can pass it
-   to upload-file to actually upload your file."
-  [user repo path options]
-  (let [path (file path)]
-    (assoc (api-call :post "repos/%s/%s/downloads"
-                     [user repo]
-                     (assoc options
-                       :name (.getName path)
-                       :size (.length path)))
-      :filepath path)))
+#?(:clj
+   ;; Github uploads are a two step process. First we get a download resource and then
+   ;; we use that to upload the file.
+   (defn download-resource
+     "Get a download resource for a file you want to upload. You can pass it
+      to upload-file to actually upload your file."
+     [user repo path options]
+     (let [path (file path)]
+       (assoc (api-call :post "repos/%s/%s/downloads"
+                        [user repo]
+                        (assoc options
+                          :name (.getName path)
+                          :size (.length path)))
+         :filepath path))))
 
-;; This isn't really even a Github API call, since it calls an Amazon API.
-;; As such, it doesn't provide the same guarentees as the rest of the API.
-;; We'll just return the raw response.
-(defn upload-file
-  "Upload a file given a download resource obtained from download-resource."
-  [resp]
-  (post (:s3_url resp)
-        {:multipart [["key" (:path resp)]
-                     ["acl" (:acl resp)]
-                     ["success_action_status" "201"]
-                     ["Filename" (:name resp)]
-                     ["AWSAccessKeyId" (:accesskeyid resp)]
-                     ["Policy" (:policy resp)]
-                     ["Signature" (:signature resp)]
-                     ["Content-Type" (:mime_type resp)]
-                     ["file" (:filepath resp)]]}))
+#?(:clj
+   ;; This isn't really even a Github API call, since it calls an Amazon API.
+   ;; As such, it doesn't provide the same guarentees as the rest of the API.
+   ;; We'll just return the raw response.
+   (defn upload-file
+     "Upload a file given a download resource obtained from download-resource."
+     [resp]
+     (post (:s3_url resp)
+           {:multipart [["key" (:path resp)]
+                        ["acl" (:acl resp)]
+                        ["success_action_status" "201"]
+                        ["Filename" (:name resp)]
+                        ["AWSAccessKeyId" (:accesskeyid resp)]
+                        ["Policy" (:policy resp)]
+                        ["Signature" (:signature resp)]
+                        ["Content-Type" (:mime_type resp)]
+                        ["file" (:filepath resp)]]})))
 
 ;; Repo Forks API
 
@@ -386,43 +394,44 @@
 
 ;; ## PubSubHubbub
 
-(defn pubsubhubub
-  "Create or modify a pubsubhubub subscription.
-   Options are:
-      secret -- A shared secret key that generates an SHA HMAC of the
-                payload content."
-  [user repo mode event callback & [options]]
-  (no-content?
-   (post "https://api.github.com/hub"
-         (merge
-           (when-let [oauth-token (:oauth-token options)]
-             {:headers {"Authorization" (str "token " oauth-token)}})
-           {:basic-auth (:auth options)
-            :form-params
-            (merge
-             {"hub.mode" mode
-              "hub.topic" (format "https://github.com/%s/%s/events/%s"
-                                  user repo event)
-              "hub.callback" callback}
-             (when-let [secret (:secret options)]
-               {"hub.secret" secret}))}))))
+#?(:clj
+   (defn pubsubhubub
+     "Create or modify a pubsubhubub subscription.
+      Options are:
+         secret -- A shared secret key that generates an SHA HMAC of the
+                   payload content."
+     [user repo mode event callback & [options]]
+     (no-content?
+       (post "https://api.github.com/hub"
+             (merge
+               (when-let [oauth-token (:oauth-token options)]
+                 {:headers {"Authorization" (str "token " oauth-token)}})
+               {:basic-auth (:auth options)
+                :form-params
+                            (merge
+                              {"hub.mode"     mode
+                               "hub.topic"    (format "https://github.com/%s/%s/events/%s"
+                                                      user repo event)
+                               "hub.callback" callback}
+                              (when-let [secret (:secret options)]
+                                {"hub.secret" secret}))})))))
 
 ;; ## Repo Contents API
 
 (defn- decode-b64
   "Decodes a base64 encoded string in a response"
   ([res str? path]
-     (if (and (map? res) (= (:encoding res) "base64"))
-       (if-let [^String encoded (get-in res path)]
-         (if (not (empty? encoded))
-           (let [trimmed (.replace encoded "\n" "")
-                 raw (.getBytes trimmed "UTF-8")
-                 decoded (if (seq raw) (b64/decode raw) (byte-array))
-                 done (if str? (String. decoded "UTF-8") decoded)]
-             (assoc-in res path done))
-           res)
+   (if (and (map? res) (= (:encoding res) "base64"))
+     (if-let [^String encoded (get-in res path)]
+       (if (not (empty? encoded))
+         (let [trimmed (.replace encoded "\n" "")
+               raw (.getBytes trimmed "UTF-8")
+               decoded (if (seq raw) (b64/decode raw) (byte-array))
+               done (if str? (String. decoded "UTF-8") decoded)]
+           (assoc-in res path done))
          res)
-       res))
+       res)
+     res))
   ([res str?] (decode-b64 res str? [:content]))
   ([res] (decode-b64 res false [:content])))
 
@@ -436,8 +445,8 @@
       str? -- Whether the content should be decoded to String. Defaults to true."
   [user repo {:keys [str?] :or {str? true} :as options}]
   (decode-b64
-   (api-call :get "repos/%s/%s/readme" [user repo] (dissoc options :str?))
-   str?))
+    (api-call :get "repos/%s/%s/readme" [user repo] (dissoc options :str?))
+    str?))
 
 (defn contents
   "Get the contents of any file or directory in a repository.
@@ -446,8 +455,8 @@
       str? -- Whether the content should be decoded to a String. Defaults to false (ByteArray)."
   [user repo path {:keys [str?] :as options}]
   (decode-b64
-   (api-call :get "repos/%s/%s/contents/%s" [user repo path] (dissoc options :str?))
-   str?))
+    (api-call :get "repos/%s/%s/contents/%s" [user repo path] (dissoc options :str?))
+    str?))
 
 (defn update-contents
   "Update a file in a repository
@@ -486,13 +495,13 @@
    Options are:
       ref -- The name of the Commit/Branch/Tag. Defaults to master."
   ([user repo archive-format {git-ref :ref :or {git-ref ""} :as options}]
-     (let [proper-options (-> options
-                              (assoc :follow-redirects false)
-                              (dissoc :ref))
-           resp (raw-api-call :get "repos/%s/%s/%s/%s" [user repo archive-format git-ref] proper-options)]
-       (if (= (resp :status) 302)
-         (get-in resp [:headers "location"])
-         resp))))
+   (let [proper-options (-> options
+                            (assoc :follow-redirects false)
+                            (dissoc :ref))
+         resp (raw-api-call :get "repos/%s/%s/%s/%s" [user repo archive-format git-ref] proper-options)]
+     (if (= (resp :status) 302)
+       (get-in resp [:headers "location"])
+       resp))))
 
 ;; ## Status API
 (def combined-state-opt-in "application/vnd.github.she-hulk-preview+json")
