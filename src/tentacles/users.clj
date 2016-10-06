@@ -111,3 +111,8 @@
   "List the currently authenticated user's teams across all organizations"
   [& [options]]
   (api-call :get "user/teams" nil options))
+
+(defn repos
+  "All repositories for a user."
+  [user & [options]]
+  (api-call :get "users/%s/repos" [user] options))
