@@ -566,6 +566,10 @@
   [user repo id & [options]]
   (api-call :get "repos/%s/%s/releases/%s" [user repo id] options))
 
+(defn specific-release-by-tag
+  "Gets a specific release by tag."
+  [user repo tag & [options]]
+  (api-call :get "repos/%s/%s/releases/tags/%s" [user repo tag] options))
 
 (defn create-release
   "Creates a release.
