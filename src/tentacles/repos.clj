@@ -294,7 +294,7 @@
 (defn watching
   "List all the repositories that a user is watching."
   [user & [options]]
-  (api-call :get "users/%s/watched" [user] options))
+  (api-call :get "users/%s/subscriptions" [user] options))
 
 (defn watching?
   "Check if you are watching a repository."
