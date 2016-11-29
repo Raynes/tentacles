@@ -99,14 +99,15 @@
                           {:headers {"Accept" accept}})
                         (when oauth-token
                           {:headers {"Authorization" (str "token " oauth-token)}})
-                        (when etag
-                          {:headers {"if-None-Match" etag}})
                         (when user-agent
                           {:headers {"User-Agent" user-agent}})
                         (when otp
                           {:headers {"X-GitHub-OTP" otp}})
-                        (when if-modified-since
-                          {:headers {"if-Modified-Since" if-modified-since}}))
+                        (when-not (query :all-pages)
+                          (when etag
+                            {:headers {"if-None-Match" etag}})
+                          (when if-modified-since
+                            {:headers {"if-Modified-Since" if-modified-since}})))
         raw-query (:raw query)
         proper-query (query-map (dissoc query :auth :oauth-token :all-pages :accept :user-agent :otp))
         req (if (#{:post :put :delete :patch} method)

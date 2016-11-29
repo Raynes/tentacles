@@ -44,7 +44,7 @@ If an API function has no options and authentication would have no uses for that
 Authentication is supported by Github user authentication `:auth <username:password>` as demonstrated above, or by oauth or oauth2.  For oauth use `:oauth-token <token>` instead of `:auth` in the options map.  Likewise, for oauth2, include `:client-id <client_id> :client-token <client_token>` in the options map.
 
 You can access useful information returned by the API such as current
-rate limits, etags, etc. by checking the response with `core/api-meta`. You can then use this to perform conditional requests against the API. If the data has not changed, the keyword `:tentacles.core/not-modified` will be returned. This does not consume any API call quota.
+rate limits, etags, etc. by checking the response with `core/api-meta`. You can then use this to perform conditional requests against the API. If the data has not changed, the keyword `:tentacles.core/not-modified` will be returned. This does not consume any API call quota. Please be aware that conditional requests won't work if :all-pages is set to true.
 
 ```clojure
 user> (core/api-meta (repos/readme "Raynes" "tentacles" {}))
