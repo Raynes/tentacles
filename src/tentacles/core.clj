@@ -33,12 +33,13 @@
 (defn extract-useful-meta
   [h]
   (let [{:strs [etag last-modified x-ratelimit-limit x-ratelimit-remaining
-                x-poll-interval]}
+                x-poll-interval x-ratelimit-reset]}
         h]
     {:etag etag :last-modified last-modified
      :call-limit (when x-ratelimit-limit (Long/parseLong x-ratelimit-limit))
      :call-remaining (when x-ratelimit-remaining (Long/parseLong x-ratelimit-remaining))
-     :poll-interval (when x-poll-interval (Long/parseLong x-poll-interval))}))
+     :poll-interval (when x-poll-interval (Long/parseLong x-poll-interval))
+     :call-limit-reset (when x-ratelimit-reset (Long/parseLong x-ratelimit-reset))}))
 
 (defn api-meta
   [obj]
