@@ -15,6 +15,12 @@
   [options]
   (api-call :get "user/orgs" nil options))
 
+(defn orgs-memberships
+  "List all the organizational memberships including for the currently
+   authenticated user including `state` and `role` of the user."
+  [options]
+  (api-call :get "user/memberships/orgs" nil options))
+
 (defn specific-org
   "Get a specific organization."
   [org & [options]]
