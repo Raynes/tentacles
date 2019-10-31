@@ -86,8 +86,8 @@
 (defn make-request [method end-point positional query]
   (let [{:keys [auth throw-exceptions follow-redirects accept
                 oauth-token etag if-modified-since user-agent
-                otp]
-         :or {follow-redirects true throw-exceptions false}
+                otp conn-timeout socket-timeout conn-request-timeout]
+         :or {follow-redirects true throw-exceptions false }
          :as query} (merge defaults query)
         req (merge-with merge
                         {:url (format-url end-point positional)
@@ -106,9 +106,15 @@
                         (when otp
                           {:headers {"X-GitHub-OTP" otp}})
                         (when if-modified-since
-                          {:headers {"if-Modified-Since" if-modified-since}}))
+                          {:headers {"if-Modified-Since" if-modified-since}})
+                        (when conn-timeout
+                          {:conn-timeout conn-timeout})
+                        (when socket-timeout
+                          {:socket-timeout socket-timeout})
+                        (when conn-request-timeout
+                          {:conn-request-timeout conn-request-timeout}))
         raw-query (:raw query)
-        proper-query (query-map (dissoc query :auth :oauth-token :all-pages :accept :user-agent :otp))
+        proper-query (query-map (dissoc query :auth :oauth-token :all-pages :accept :user-agent :otp :conn-timeout :socket-timeout :conn-request-timeout))
         req (if (#{:post :put :delete :patch} method)
               (assoc req :body (json/generate-string (or raw-query proper-query)))
               (assoc req :query-params proper-query))]
