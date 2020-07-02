@@ -1,10 +1,10 @@
-[![Dependencies Status](https://jarkeeper.com/Raynes/tentacles/status.svg)](https://jarkeeper.com/Raynes/tentacles)
+[![Dependencies Status](https://jarkeeper.com/elimuhub/tentacles/status.svg)](https://jarkeeper.com/elimuhub/tentacles)
 
 # An octocat is nothing without her tentacles
 
 Tentacles is a Clojure library for working with the Github v3 API. It supports the entire Github API.
 
-This library is the successor to my old [clj-github](https://github.com/Raynes/clj-github) library. clj-github will no longer be maintained.
+This library is the successor to my old [clj-github](https://github.com/elimuhub/clj-github) library. clj-github will no longer be maintained.
 
 ## Usage
 
@@ -60,7 +60,7 @@ user> (repos/readme "Raynes" "tentacles" {:if-modified-since "Mon, 28 Jan 2013 2
 Similarly, you can set an User-Agent to make your requests more friendly and identifiable.
 
 ```clojure
-user> (repos/readme "Raynes" "tentacles" {:user-agent "MyPhoneApp"})
+user> (repos/readme "elimuhub" "tentacles" {:user-agent "Firefox"})
 ```
 
 The Github API is massive and great. I can't demonstrate every API call. Everything is generally just as easy as the above examples, and I'm working hard to document things as well as possible, so go explore!
@@ -76,15 +76,15 @@ If you run into something that isn't documented well or you don't understand, lo
 In order to run the tests, you need to create a `testinfo.clj` in the root of the checkout with some info required for the tests to run properly. This file is ignored by git, so don't worry about committing auth info. This file should contain a Clojure map like the following:
 
 ```clojure
-{:user "" ;; Github username
- :pass "" ;; Github password
- :follows ""} ;; Username of a person that this user follows.
+{:user "elimuhub" ;; Github username
+ :pass "#Farhan#2009#" ;; Github password
+ :follows "raynes"} ;; Username of a person that this user follows.
 ```
 
 As more tests are written this information may grow.
 
 ## License
 
-Copyright (C) 2011 Anthony Grimes
+Copyright (C) 2020 Hassan Kibiti 
 
 Distributed under the Eclipse Public License, the same as Clojure.
